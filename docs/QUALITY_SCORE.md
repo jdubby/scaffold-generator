@@ -14,7 +14,7 @@ this document keeps debt visible and prevents silent accumulation.
 | Test coverage (unit)  | B     | 57 unit tests; module tests run against the in-memory filesystem double. |
 | Type safety           | B     | `mypy src tests` passes under strict configuration.                  |
 | Documentation         | B     | Core docs and README are maintained; remaining status gaps are tracked below. |
-| CI / automation       | B     | Workflow runs all four gates plus knowledge-base checks; verified locally, executes on push once a remote exists. |
+| CI / automation       | B     | Workflow runs all four gates plus knowledge-base checks on every push/PR; first run verified green on GitHub Actions (Python 3.11). |
 | Security              | B     | Schema validation, slug-constrained spec values, and output-path preflight are implemented and tested. Dependency pinning mismatch still tracked. |
 | Reliability           | B     | Error paths are schema-structured, stderr-routed, and covered end-to-end. Boundary-double migration still tracked. |
 
