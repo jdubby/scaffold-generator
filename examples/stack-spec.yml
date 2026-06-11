@@ -27,4 +27,4 @@ database:
 
 # Empty categories may be listed explicitly or omitted entirely.
 # inference:
-#   - pytorch-mobile
+#   - pytorch

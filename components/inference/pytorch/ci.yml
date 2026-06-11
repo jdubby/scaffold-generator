@@ -1,0 +1,13 @@
+  pytorch-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install dependencies (CPU wheels)
+        run: pip install -e ".[dev]" --extra-index-url https://download.pytorch.org/whl/cpu
+      - name: Unit tests (CPU, stub weights)
+        run: pytest inference/
+      - name: Model evaluation gate
+        run: echo "Replace with the project's eval-set check against the pinned threshold."

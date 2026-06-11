@@ -111,6 +111,27 @@ Feature: Scaffold generation
     And "AGENTS.md" contains a repository map row for "fastapi"
     And "AGENTS.md" contains a repository map row for "firebase"
 
+  # AC-7
+  Scenario: Bundled library covers a web stack with inference
+    Given the component library and core templates bundled with this repository
+    And a valid stack spec with name "web-app", platform "web"
+    And the spec declares frontend component "nextjs"
+    And the spec declares backend component "fastapi"
+    And the spec declares database component "postgres"
+    And the spec declares inference component "pytorch"
+    When the user runs the scaffold generator with the spec
+    Then the generator exits successfully
+    And no warnings are printed
+    And "ARCHITECTURE.md" contains a section for "nextjs"
+    And "docs/RELIABILITY.md" contains a section for "postgres"
+    And "docs/SECURITY.md" contains a section for "pytorch"
+    And "ci.yml" contains a job block for "nextjs"
+    And "ci.yml" contains a job block for "postgres"
+    And "ci.yml" contains a job block for "pytorch"
+    And "AGENTS.md" contains a repository map row for "nextjs"
+    And "AGENTS.md" contains a repository map row for "postgres"
+    And "AGENTS.md" contains a repository map row for "pytorch"
+
   # AC-5
   Scenario: --list-components prints available modules by category
     When the user runs the scaffold generator with --list-components

@@ -15,10 +15,11 @@ Reads `spec.yml`, resolves each declared component to a module in the component
 library, and assembles a complete scaffold in `./my-project`. Unknown components
 produce clearly-marked placeholder sections rather than failing.
 
-The repo bundles the component library (`components/` — currently react-native,
-fastapi, and firebase) and the stack-agnostic core templates (`core/`), used by
-default when `--components-dir`/`--core-dir` are not given. To add a module, see
-`components/MODULE_AUTHORING.md`.
+The repo bundles the component library (`components/`) and the stack-agnostic
+core templates (`core/`), used by default when `--components-dir`/`--core-dir`
+are not given. Bundled modules: react-native and nextjs (frontend), fastapi
+(backend), firebase and postgres (database), pytorch (inference). To add a
+module, see `components/MODULE_AUTHORING.md`.
 
 ```bash
 scaffold --list-components     # list all available component modules by category

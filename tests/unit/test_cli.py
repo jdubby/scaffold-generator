@@ -228,6 +228,34 @@ class TestErrorChannel:
         assert "not writable" in result.stderr
 
 
+class TestBundledLibraryCompleteness:
+    """Every module shipped in components/ must generate warning-free with the
+    bundled core templates — a missing or broken fragment fails this test."""
+
+    COMPONENTS = Path(__file__).parent.parent.parent / "components"
+
+    def test_every_bundled_module_generates_without_warnings(
+        self, runner: CliRunner, tmp_path: Path
+    ) -> None:
+        spec_lines = ["name: all-modules", "platform: hybrid"]
+        for category_dir in sorted(self.COMPONENTS.iterdir()):
+            if not category_dir.is_dir():
+                continue
+            modules = sorted(p.name for p in category_dir.iterdir() if p.is_dir())
+            if not modules:
+                continue
+            spec_lines.append(f"{category_dir.name}:")
+            spec_lines.extend(f"  - {module}" for module in modules)
+        spec = tmp_path / "all-modules.yml"
+        spec.write_text("\n".join(spec_lines) + "\n")
+
+        result = runner.invoke(main, [str(spec), "--output", str(tmp_path / "out")])
+
+        assert result.exit_code == 0, result.output
+        assert "Warning" not in result.output, result.output
+        assert "warnings" not in result.output, result.output
+
+
 class TestBundledExampleSpec:
     """The bundled example spec must stay valid as the schema and library evolve."""
 
