@@ -17,8 +17,8 @@ produce clearly-marked placeholder sections rather than failing.
 
 The repo bundles the component library (`components/`) and the stack-agnostic
 core templates (`core/`), used by default when `--components-dir`/`--core-dir`
-are not given. Bundled modules: react-native and nextjs (frontend), fastapi
-(backend), firebase and postgres (database), pytorch (inference). To add a
+are not given. Bundled modules: react-native and nextjs (frontend), fastapi and
+python-cli (backend), firebase and postgres (database), pytorch (inference). To add a
 module, see `components/MODULE_AUTHORING.md`.
 
 ```bash

@@ -132,6 +132,20 @@ Feature: Scaffold generation
     And "AGENTS.md" contains a repository map row for "postgres"
     And "AGENTS.md" contains a repository map row for "pytorch"
 
+  # AC-7
+  Scenario: Bundled library covers a command-line utility
+    Given the component library and core templates bundled with this repository
+    And a valid stack spec with name "my-cli-tool", platform "backend"
+    And the spec declares backend component "python-cli"
+    When the user runs the scaffold generator with the spec
+    Then the generator exits successfully
+    And no warnings are printed
+    And "ARCHITECTURE.md" contains a section for "python-cli"
+    And "docs/RELIABILITY.md" contains a section for "python-cli"
+    And "docs/SECURITY.md" contains a section for "python-cli"
+    And "ci.yml" contains a job block for "python-cli"
+    And "AGENTS.md" contains a repository map row for "python-cli"
+
   # AC-5
   Scenario: --list-components prints available modules by category
     When the user runs the scaffold generator with --list-components
