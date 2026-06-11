@@ -1,0 +1,61 @@
+name: Scaffold Generator Quality Gate
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install project and tooling
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
+
+      - name: Validate knowledge base structure
+        run: |
+          fail=0
+          lines=$(wc -l < AGENTS.md)
+          if [ "$lines" -gt 120 ]; then
+            echo "ERROR: AGENTS.md has $lines lines (limit: 120)." >&2
+            echo "Keep AGENTS.md as a navigator pointing to docs/, not a manual." >&2
+            fail=1
+          fi
+          for f in ARCHITECTURE.md \
+                    docs/QUALITY_SCORE.md \
+                    docs/DESIGN.md \
+                    docs/RELIABILITY.md \
+                    docs/SECURITY.md \
+                    docs/design-docs/core-beliefs.md \
+                    docs/exec-plans/tech-debt-tracker.md; do
+            if [ ! -f "$f" ]; then
+              echo "ERROR: Required knowledge base file missing: $f" >&2
+              fail=1
+            fi
+          done
+          exit $fail
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Format check
+        run: ruff format --check .
+
+      - name: Type check
+        run: mypy src tests
+
+      - name: Test
+        run: pytest

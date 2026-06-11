@@ -1,0 +1,30 @@
+# Example stack spec for the scaffold generator.
+#
+# Try it:   scaffold examples/stack-spec.yml --output ./vocal-app
+# Check it: scaffold --validate examples/stack-spec.yml
+#
+# See the "Spec format" section of README.md for the full field reference.
+
+# Required. A plain slug (letters, digits, '.', '_', '-'; no path separators,
+# no leading dot). Used as the default output directory name.
+name: vocal-app
+
+# Required. One of: mobile, web, hybrid, backend.
+platform: mobile
+
+# The four component categories are optional lists of module names. Names must
+# match modules in the component library (`scaffold --list-components`).
+# A name with no matching module generates a clearly-marked placeholder
+# section and a warning instead of failing.
+frontend:
+  - react-native
+
+backend:
+  - fastapi
+
+database:
+  - firebase
+
+# Empty categories may be listed explicitly or omitted entirely.
+# inference:
+#   - pytorch-mobile

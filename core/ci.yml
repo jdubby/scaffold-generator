@@ -1,0 +1,16 @@
+# Continuous integration for the generated project.
+# One job per stack component is assembled below; add project-wide gates here.
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  quality-gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run project quality gates
+        run: echo "Replace with this project's test, lint, format, and type-check commands."
+# ASSEMBLE:ci
