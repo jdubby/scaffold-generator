@@ -8,11 +8,11 @@ of the stack.
 ## What it does
 
 ```bash
-scaffold spec.yml ./my-project
+scaffold spec.yml -o ./my-project
 ```
 
 Reads `spec.yml`, resolves each declared component to a module in the component
-library, and assembles a complete scaffold in `./my-project`. Unknown components
+library, and assembles a complete scaffold in `./my-project` (via `-o`/`--output`). Unknown components
 produce clearly-marked placeholder sections rather than failing.
 
 The repo bundles the component library (`components/`) and the stack-agnostic
