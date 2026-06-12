@@ -6,6 +6,7 @@ import click
 
 from scaffold_generator.assembler import FileAssembler
 from scaffold_generator.filesystem import FileSystem, RealFileSystem
+from scaffold_generator.importer import SPEC_FILENAME, ImportResult, PackageImporter
 from scaffold_generator.resolver import ComponentResolver, Placeholder
 from scaffold_generator.spec import SpecLoader
 from scaffold_generator.validator import ContractValidator
@@ -59,7 +60,13 @@ def main(
     list_components: bool,
     validate_spec: Path | None,
 ) -> None:
-    """Generate a project scaffold from a YAML stack spec."""
+    """Generate a project scaffold from a YAML stack spec.
+
+    SPEC_FILE is either a spec file or a scaffold package directory: a
+    directory holding a stack-spec.yml plus content files (product specs,
+    exec plans, feature files, a domain map) at their final scaffold-relative
+    paths. Package content is overlaid onto the generated scaffold.
+    """
     fs = RealFileSystem()
 
     if list_components:
@@ -117,7 +124,20 @@ def _cmd_generate(
     core_dir: Path,
     fs: FileSystem,
 ) -> None:
-    """Resolve, assemble, write, and validate the scaffold."""
+    """Resolve, assemble, overlay any package content, write, and validate."""
+    # 0. A directory argument is a scaffold package: its stack spec drives
+    # generation and its content files are overlaid before writing
+    importer: PackageImporter | None = None
+    if fs.is_dir(spec_file):
+        importer = PackageImporter(spec_file, fs)
+        if not fs.is_file(importer.spec_path):
+            click.echo(
+                f"Error: not a scaffold package: no {SPEC_FILENAME} found in {spec_file}",
+                err=True,
+            )
+            raise SystemExit(1)
+        spec_file = importer.spec_path
+
     # 1. Load spec
     try:
         spec = SpecLoader(fs).load(spec_file)
@@ -142,10 +162,14 @@ def _cmd_generate(
     # Warn for placeholders
     for component in components:
         if isinstance(component, Placeholder):
-            click.echo(
+            message = (
                 f"Warning: no module found for '{component.name}' "
                 f"({component.category}). A placeholder will be inserted."
             )
+            available = _available_modules(components_dir, component.category, fs)
+            if available:
+                message += f" Available {component.category} modules: {', '.join(available)}."
+            click.echo(message)
 
     # 4. Assemble files from core templates
     assembler = FileAssembler(fs)
@@ -159,18 +183,46 @@ def _cmd_generate(
     else:
         click.echo(f"Warning: core templates directory not found: {core_dir}")
 
-    # 5. Write scaffold
+    # 5. Overlay package content onto the assembled files
+    import_result: ImportResult | None = None
+    if importer is not None:
+        import_result = importer.apply(files)
+
+    # 6. Write scaffold
     try:
         writer.write(dest, files)
     except (FileExistsError, PermissionError) as exc:
         click.echo(f"Error: {exc}", err=True)
         raise SystemExit(1) from exc
 
-    # 6. Validate contract
+    # 7. Validate contract
     errors = ContractValidator(fs).validate(dest)
     if errors:
         click.echo("Contract validation warnings:")
         for error in errors:
             click.echo(f"  - {error.message}")
 
+    if import_result is not None:
+        _echo_import_summary(import_result)
     click.echo(f"Scaffold generated at: {dest}")
+
+
+def _available_modules(components_dir: Path, category: str, fs: FileSystem) -> list[str]:
+    """Module names available in *category*, for unknown-component warnings."""
+    category_dir = components_dir / category
+    if not fs.is_dir(category_dir):
+        return []
+    return sorted(p.name for p in fs.list_dir(category_dir) if fs.is_dir(p))
+
+
+def _echo_import_summary(result: ImportResult) -> None:
+    if result.overlaid:
+        click.echo("Package content imported:")
+        for relative in result.overlaid:
+            click.echo(f"  - {relative}")
+    for relative in result.indexed_specs:
+        click.echo(f"Indexed in docs/product-specs/index.md: {relative}")
+    if result.domain_map_merged:
+        click.echo("Domain map merged into ARCHITECTURE.md.")
+    for note in result.notes:
+        click.echo(f"Note: {note}")

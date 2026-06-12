@@ -39,7 +39,9 @@ _CORE_TEMPLATES = {
     "docs/SECURITY.md": "# Security\n\n<!-- ASSEMBLE:security -->\n",
     "docs/design-docs/core-beliefs.md": "# Core Beliefs\n",
     "docs/exec-plans/tech-debt-tracker.md": "# Tech Debt\n",
+    "docs/exec-plans/active/.gitkeep": "",
     "docs/product-specs/index.md": "# Product Specs\n",
+    "tests/features/.gitkeep": "",
 }
 
 

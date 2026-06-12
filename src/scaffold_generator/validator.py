@@ -22,6 +22,12 @@ REQUIRED_FILES = (
     "docs/product-specs/index.md",
 )
 
+# Directories the workflow documents refer to; they must exist even when empty.
+REQUIRED_DIRS = (
+    "tests/features",
+    "docs/exec-plans/active",
+)
+
 _UNRESOLVED_MARKERS = ("<!-- ASSEMBLE:", "# ASSEMBLE:")
 _CHECKED_SUFFIXES = {".md", ".yml"}
 
@@ -46,6 +52,7 @@ class ContractValidator:
         """
         errors: list[ValidationError] = []
         errors.extend(self._check_required_files(project_dir))
+        errors.extend(self._check_required_dirs(project_dir))
         errors.extend(self._check_agents_line_count(project_dir))
         errors.extend(self._check_unresolved_markers(project_dir))
         return errors
@@ -55,6 +62,13 @@ class ContractValidator:
         for required in REQUIRED_FILES:
             if not self._fs.is_file(project_dir / required):
                 errors.append(ValidationError(f"Required file missing: {required}"))
+        return errors
+
+    def _check_required_dirs(self, project_dir: Path) -> list[ValidationError]:
+        errors = []
+        for required in REQUIRED_DIRS:
+            if not self._fs.is_dir(project_dir / required):
+                errors.append(ValidationError(f"Required directory missing: {required}"))
         return errors
 
     def _check_agents_line_count(self, project_dir: Path) -> list[ValidationError]:

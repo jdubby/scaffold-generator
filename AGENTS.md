@@ -53,6 +53,7 @@ exists for the next increment.
 | Spec loader & validator | `src/scaffold_generator/spec.py`     |
 | Component resolver      | `src/scaffold_generator/resolver.py` |
 | File assembler          | `src/scaffold_generator/assembler.py`|
+| Package importer        | `src/scaffold_generator/importer.py` |
 | Output writer           | `src/scaffold_generator/writer.py`   |
 | Contract validator      | `src/scaffold_generator/validator.py`|
 | Filesystem boundary     | `src/scaffold_generator/filesystem.py`|

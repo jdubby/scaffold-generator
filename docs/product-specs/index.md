@@ -8,6 +8,7 @@ Each spec drives the BDD scenarios in `tests/features/`.
 | Spec | Feature file | Status |
 |------|-------------|--------|
 | [Scaffold generation](./scaffold-generation.md) | `tests/features/scaffold_generation.feature` | Active |
+| [Scaffold package import](./package-import.md) | `tests/features/package_import.feature` | Active |
 
 ## How to write a spec
 

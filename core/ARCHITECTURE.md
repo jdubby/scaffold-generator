@@ -1,5 +1,14 @@
 # Architecture
 
+## Domain map
+
+One row per domain: what it owns and which modules implement it. Filled in by
+a scaffold package import, or by hand as the codebase takes shape.
+
+| Domain | Responsibility | Primary modules |
+|--------|---------------|-----------------|
+| _none yet_ | — | — |
+
 ## Stack components
 
 One section per declared stack component, contributed by its library module.

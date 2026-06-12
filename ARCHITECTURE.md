@@ -8,6 +8,7 @@
 | Spec                | Load, parse, and validate the YAML stack spec               | `spec.py`                    |
 | Resolver            | Map spec components to module directories or placeholders   | `resolver.py`                |
 | Assembler           | Combine core templates and component fragments into files   | `assembler.py`               |
+| Importer            | Overlay scaffold-package content onto the assembled files   | `importer.py`                |
 | Writer              | Write assembled files to the output directory               | `writer.py`                  |
 | Validator           | Check the output scaffold satisfies the contract rules      | `validator.py`               |
 | Filesystem          | Substitutable boundary for all filesystem access            | `filesystem.py`              |
@@ -17,9 +18,9 @@
 Dependencies flow in one direction only. A lower layer must never import from a higher one.
 
 ```
-Spec → Resolver → Assembler → Writer
-                            ↘
-                          Validator
+Spec → Resolver → Assembler → Importer → Writer
+                                       ↘
+                                     Validator
 CLI → (orchestrates all layers)
 ```
 
@@ -28,6 +29,7 @@ CLI → (orchestrates all layers)
 | Spec      | YAML parsing, schema validation, typed spec model     | nothing                    |
 | Resolver  | Component lookup, placeholder generation              | Spec                       |
 | Assembler | Template loading, marker replacement, fragment join   | Spec, Resolver             |
+| Importer  | Package-content overlay onto the assembled files      | nothing (reads filesystem) |
 | Writer    | Filesystem writes, directory creation                 | Assembler                  |
 | Validator | Contract assertions on the written output             | nothing (reads filesystem) |
 | CLI       | Orchestration, error formatting, exit codes           | all layers                 |
@@ -40,6 +42,8 @@ Each layer exposes a narrow interface that test doubles can substitute:
 - **`ComponentResolver`** — given a `StackSpec`, returns `list[ResolvedComponent]`
   (each either a real module path or a `Placeholder`)
 - **`FileAssembler`** — given a template and components, returns assembled file content
+- **`PackageImporter`** — given a package directory and the assembled files mapping,
+  overlays the package's content files and returns an `ImportResult`
 - **`ScaffoldWriter`** — given an output directory and assembled content, writes files
 - **`ContractValidator`** — given an output directory, returns `list[ValidationError]`
 - **`FileSystem`** — protocol behind all filesystem access; `RealFileSystem` in

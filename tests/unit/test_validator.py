@@ -3,7 +3,12 @@
 from pathlib import Path
 
 from scaffold_generator.filesystem import InMemoryFileSystem
-from scaffold_generator.validator import AGENTS_MAX_LINES, REQUIRED_FILES, ContractValidator
+from scaffold_generator.validator import (
+    AGENTS_MAX_LINES,
+    REQUIRED_DIRS,
+    REQUIRED_FILES,
+    ContractValidator,
+)
 
 PROJECT_DIR = Path("project")
 
@@ -11,6 +16,7 @@ PROJECT_DIR = Path("project")
 def _scaffold_files() -> dict[str, str]:
     """File contents for a minimal valid scaffold under PROJECT_DIR."""
     files = {f"project/{required}": "# placeholder\n" for required in REQUIRED_FILES}
+    files.update({f"project/{required}/.gitkeep": "" for required in REQUIRED_DIRS})
     files["project/AGENTS.md"] = "# Agent Workflow\n"  # must stay within the line limit
     return files
 
@@ -29,6 +35,15 @@ class TestContractValidator:
         del files["project/docs/EVALUATOR.md"]
 
         assert any("EVALUATOR.md" in message for message in _validate(files))
+
+    def test_validate_fails_when_workflow_directory_missing(self) -> None:
+        files = _scaffold_files()
+        del files["project/tests/features/.gitkeep"]
+        del files["project/docs/exec-plans/active/.gitkeep"]
+
+        messages = _validate(files)
+        assert any("tests/features" in message for message in messages)
+        assert any("docs/exec-plans/active" in message for message in messages)
 
     def test_validate_fails_when_agents_md_exceeds_line_limit(self) -> None:
         files = _scaffold_files()

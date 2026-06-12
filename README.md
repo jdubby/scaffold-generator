@@ -26,6 +26,29 @@ scaffold --list-components     # list all available component modules by categor
 scaffold --validate spec.yml   # validate a spec without generating output
 ```
 
+## Importing a scaffold package
+
+Upstream tools (e.g. product-laboratory) export a *scaffold package*: a
+directory holding a `stack-spec.yml` plus content files — product specs, exec
+plans, Gherkin feature files, a domain map — already laid out at their final
+scaffold-relative paths. Pass the package directory instead of a spec file:
+
+```bash
+scaffold ./snapsell-scaffold -o ./snapsell
+```
+
+This generates the scaffold from the package's spec, then overlays the content
+files into the output, creating directories as needed. Two files get special
+treatment:
+
+- files under `docs/product-specs/` are also added to the index table in
+  `docs/product-specs/index.md`;
+- `docs/domain-map.md` is consumed — its table rows are merged into the
+  **Domain map** section of `ARCHITECTURE.md` instead of the file being copied.
+
+`stack-spec.yml` itself and hidden files (`.DS_Store`) are not copied. The
+command ends with a summary of everything it placed.
+
 ## Spec format
 
 A stack spec is a small YAML file. A complete, runnable example ships at
@@ -71,6 +94,7 @@ Rules, enforced by JSON-schema validation before any generation work:
 │       ├── spec.py         # YAML spec loading and schema validation
 │       ├── resolver.py     # Component resolution and placeholder generation
 │       ├── assembler.py    # Template and fragment assembly
+│       ├── importer.py     # Scaffold-package overlay (specs, plans, domain map)
 │       ├── writer.py       # Filesystem output
 │       ├── validator.py    # Contract validation on generated output
 │       └── filesystem.py   # Filesystem boundary (real + in-memory implementations)
