@@ -1,6 +1,6 @@
 # Quality Score
 
-> **Last reviewed:** 2026-06-10
+> **Last reviewed:** 2026-08-18
 
 This document grades each product domain and architectural layer. Update grades as
 work progresses. Add gap entries when deficiencies are found. A recurring review of
@@ -10,11 +10,11 @@ this document keeps debt visible and prevents silent accumulation.
 
 | Domain                | Grade | Notes                                                                 |
 |-----------------------|-------|-----------------------------------------------------------------------|
-| Test coverage (BDD)   | B     | All nine scaffold-generation scenarios run via pytest-bdd and pass, including out-of-the-box generation from the bundled library. |
-| Test coverage (unit)  | B     | 57 unit tests; module tests run against the in-memory filesystem double. |
+| Test coverage (BDD)   | B     | 18 scenarios run via pytest-bdd and pass: 11 for scaffold generation, 7 for scaffold-package import (`docs/product-specs/package-import.md`, AC-1–AC-7), including out-of-the-box generation from the bundled library. |
+| Test coverage (unit)  | B     | 80 unit tests; module tests run against the in-memory filesystem double. |
 | Type safety           | B     | `mypy src tests` passes under strict configuration.                  |
-| Documentation         | B     | Core docs and README are maintained; remaining status gaps are tracked below. |
-| CI / automation       | B     | Workflow runs all four gates plus knowledge-base checks on every push/PR; first run verified green on GitHub Actions (Python 3.11). |
+| Documentation         | B     | Core docs and README are maintained, including the package-import workflow; remaining status gaps are tracked below. |
+| CI / automation       | B     | Workflow runs all four gates plus knowledge-base checks on every push/PR; last run verified green on GitHub Actions (Python 3.11). |
 | Security              | B     | Schema validation, slug-constrained spec values, and output-path preflight are implemented and tested. Dependency pinning mismatch still tracked. |
 | Reliability           | B     | Error paths are schema-structured, stderr-routed, and covered end-to-end. Boundary-double migration still tracked. |
 
@@ -40,6 +40,19 @@ Add gap entries here as they are discovered. Promote to
 - **Impact:** <what degrades or breaks if left unaddressed>
 - **Action:** <what needs to happen to resolve it>
 -->
+
+### [2026-08-18] This document lagged two commits behind main
+- **Domain:** Documentation
+- **Gap:** Scaffold-package import (`docs/exec-plans/completed/2026-06-12-package-import.md`)
+  and a README usage fix landed on 2026-06-12, but this document's grades and scenario
+  counts still reflected the 2026-06-10 state.
+- **Impact:** Domain grades and test counts understated coverage and did not mention the
+  package-import feature at all.
+- **Action:** Refresh the "Last reviewed" date, BDD/unit test counts, and relevant notes
+  after every feature that lands.
+- **Resolved:** 2026-08-18 — grades and notes updated to reflect 18 BDD scenarios (11
+  scaffold-generation + 7 package-import) and 80 unit tests, and the CI note now says
+  "last run" rather than "first run".
 
 ### [2026-05-12] BDD scenarios are descriptive, not executable
 - **Domain:** Test coverage (BDD)
