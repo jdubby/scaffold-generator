@@ -12,7 +12,9 @@
 | Importer            | Overlay scaffold-package content onto the assembled files   | `importer.py`                |
 | Writer              | Write assembled files to the output directory               | `writer.py`                  |
 | Validator           | Check the output scaffold satisfies the contract rules      | `validator.py`               |
+| Baseline            | Run a generated scaffold's declared gates and classify them | `baseline.py`                |
 | Filesystem          | Substitutable boundary for all filesystem access            | `filesystem.py`              |
+| Command             | Substitutable boundary for running a command                | `runner.py`                  |
 
 ## Package layering
 
@@ -34,6 +36,7 @@ CLI → (orchestrates all layers)
 | Importer  | Package-content overlay onto the assembled files      | nothing (reads filesystem) |
 | Writer    | Filesystem writes, directory creation                 | Assembler                  |
 | Validator | Contract assertions on the written output             | nothing (reads filesystem) |
+| Baseline  | Gate execution against a generated scaffold           | Gates, Command             |
 | CLI       | Orchestration, error formatting, exit codes           | all layers                 |
 
 ## Key interfaces
@@ -51,6 +54,10 @@ Each layer exposes a narrow interface that test doubles can substitute:
   overlays the package's content files and returns an `ImportResult`
 - **`ScaffoldWriter`** — given an output directory and assembled content, writes files
 - **`ContractValidator`** — given an output directory, returns `list[ValidationError]`
+- **`BaselineRunner`** — given a generated scaffold directory, reads the gates it
+  declares and returns a `GateOutcome` per gate
+- **`CommandRunner`** — protocol behind all command execution; `RealCommandRunner`
+  in production, `FakeCommandRunner` in module unit tests. Never invokes a shell
 - **`FileSystem`** — protocol behind all filesystem access; `RealFileSystem` in
   production, `InMemoryFileSystem` in module unit tests. Each collaborator above
   accepts an optional `fs` argument; the CLI is the composition root that constructs
@@ -64,6 +71,8 @@ Each layer exposes a narrow interface that test doubles can substitute:
 - All filesystem reads and writes in production code go through the `FileSystem`
   boundary in `filesystem.py` — no bare `open()` or direct `pathlib` I/O calls in
   other modules.
+- All command execution in production code goes through the `CommandRunner`
+  boundary in `runner.py` — `subprocess` is imported there and nowhere else.
 - `validator.py` reads the filesystem but never writes. It is invoked by the CLI
   after the writer completes, not by the writer itself.
 

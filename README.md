@@ -24,7 +24,20 @@ module, see `components/MODULE_AUTHORING.md`.
 ```bash
 scaffold --list-components     # list all available component modules by category
 scaffold --validate spec.yml   # validate a spec without generating output
+scaffold --baseline ./my-project          # run that scaffold's declared gates
+scaffold --baseline ./my-project --dry-run  # print the gate commands, run nothing
 ```
+
+`--baseline` runs the quality gates a generated scaffold declares and reports what
+each one did: passed, failed, unavailable, timed out, or skipped. Read the results
+backwards from a normal test run — against a fresh scaffold a **failing** gate is
+working, because it demands behavior nobody has built yet. A gate that **passes**
+against a scaffold with no implementation is the one to look at: it may be
+asserting nothing, and will keep asserting nothing. An **unavailable** gate names
+tooling the stack still needs.
+
+Gate commands are executed as an argument vector, never through a shell; a command
+containing shell syntax is skipped and reported. See `docs/SECURITY.md`.
 
 Component modules declare their quality gate commands in a `checks.yml` fragment.
 Those commands are assembled into the **Quality gates** section of the generated

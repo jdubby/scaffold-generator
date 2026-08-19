@@ -10,12 +10,12 @@ this document keeps debt visible and prevents silent accumulation.
 
 | Domain                | Grade | Notes                                                                 |
 |-----------------------|-------|-----------------------------------------------------------------------|
-| Test coverage (BDD)   | B     | 27 scenarios run via pytest-bdd and pass: 13 for scaffold generation, 7 for executable quality gates, 7 for scaffold-package import, including out-of-the-box generation from the bundled library. |
-| Test coverage (unit)  | B     | 120 unit tests; module tests run against the in-memory filesystem double. |
+| Test coverage (BDD)   | B     | 33 scenarios run via pytest-bdd and pass: 13 for scaffold generation, 7 for executable quality gates, 6 for the gate baseline, 7 for scaffold-package import, including out-of-the-box generation from the bundled library. |
+| Test coverage (unit)  | B     | 146 unit tests; module tests run against the in-memory filesystem double. |
 | Type safety           | B     | `mypy src tests` passes under strict configuration.                  |
 | Documentation         | B     | Core docs and README are maintained, including the package-import and executable-gates workflows. Remaining status gaps are tracked below. |
 | CI / automation       | B     | This repo's own workflow runs all four gates plus knowledge-base checks on every push/PR; last run verified green on GitHub Actions (Python 3.11). Generated projects are contract-checked for gates that cannot fail (AC-8), and every bundled module's unwired gates now fail. |
-| Security              | B     | Schema validation, slug-constrained spec values, and output-path preflight are implemented and tested. Dependency pinning mismatch still tracked. |
+| Security              | B     | Schema validation, slug-constrained spec values, and output-path preflight are implemented and tested. Gate execution never invokes a shell and refuses commands carrying shell syntax (`docs/SECURITY.md`). Dependency pinning mismatch still tracked. |
 | Reliability           | B     | Error paths are schema-structured, stderr-routed, and covered end-to-end. Boundary-double migration still tracked. |
 
 ## Grade definitions

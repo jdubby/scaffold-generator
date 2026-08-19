@@ -9,7 +9,8 @@ Each spec drives the BDD scenarios in `tests/features/`.
 |------|-------------|--------|
 | [Scaffold generation](./scaffold-generation.md) | `tests/features/scaffold_generation.feature` | Active |
 | [Scaffold package import](./package-import.md) | `tests/features/package_import.feature` | Active |
-| [Executable quality gates](./executable-gates.md) | `tests/features/executable_gates.feature` | Draft |
+| [Executable quality gates](./executable-gates.md) | `tests/features/executable_gates.feature` | Active |
+| [Gate baseline](./gate-baseline.md) | `tests/features/gate_baseline.feature` | Active |
 
 ## How to write a spec
 

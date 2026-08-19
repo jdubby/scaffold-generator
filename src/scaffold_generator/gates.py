@@ -22,12 +22,40 @@ CI_FILENAME = "ci.yml"
 _SLUG = re.compile(SLUG_PATTERN)
 
 
+# The heading the rendered gate list lives under in a generated AGENTS.md, and the
+# shape of one rendered gate. parse_rendered is the inverse of _render_module, so
+# the two must change together; test_gates.py pins the round trip.
 @dataclass(frozen=True)
 class Gate:
     """One runnable quality-gate command declared by a module."""
 
     name: str
     run: str
+
+
+GATES_HEADING = "## Quality gates"
+_RENDERED_GATE = re.compile(r"^- ([A-Za-z0-9][A-Za-z0-9._-]*) — `(.+)`$")
+_NEXT_HEADING = re.compile(r"^## ", re.MULTILINE)
+
+
+def parse_rendered(agents_md: str) -> list[Gate]:
+    """The gates listed in a generated AGENTS.md Quality gates section.
+
+    Raises:
+        ValueError: if the document has no Quality gates section.
+    """
+    start = agents_md.find(GATES_HEADING)
+    if start == -1:
+        raise ValueError(f"no '{GATES_HEADING}' section found")
+    body = agents_md[start + len(GATES_HEADING) :]
+    next_heading = _NEXT_HEADING.search(body)
+    if next_heading is not None:
+        body = body[: next_heading.start()]
+    return [
+        Gate(name=match.group(1), run=match.group(2))
+        for match in (_RENDERED_GATE.match(line.strip()) for line in body.splitlines())
+        if match is not None
+    ]
 
 
 class GateCollector:

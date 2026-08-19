@@ -5,6 +5,7 @@ from pathlib import Path
 import click
 
 from scaffold_generator.assembler import FileAssembler
+from scaffold_generator.baseline import BaselineRunner, GateOutcome, Outcome
 from scaffold_generator.filesystem import FileSystem, RealFileSystem
 from scaffold_generator.gates import GATES_FILENAME, GateCollector
 from scaffold_generator.importer import SPEC_FILENAME, ImportResult, PackageImporter
@@ -53,6 +54,19 @@ _DEFAULT_CORE_DIR = Path(__file__).parent.parent.parent / "core"
     default=None,
     help="Validate a stack spec file and exit.",
 )
+@click.option(
+    "--baseline",
+    "baseline_dir",
+    type=click.Path(path_type=Path),
+    default=None,
+    help="Run a generated scaffold's declared quality gates and report what happened.",
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    default=False,
+    help="With --baseline, print the gate commands without executing any of them.",
+)
 def main(
     spec_file: Path | None,
     output: Path | None,
@@ -60,6 +74,8 @@ def main(
     core_dir: Path,
     list_components: bool,
     validate_spec: Path | None,
+    baseline_dir: Path | None,
+    dry_run: bool,
 ) -> None:
     """Generate a project scaffold from a YAML stack spec.
 
@@ -76,6 +92,10 @@ def main(
 
     if validate_spec is not None:
         _cmd_validate(validate_spec, fs)
+        return
+
+    if baseline_dir is not None:
+        _cmd_baseline(baseline_dir, dry_run, fs)
         return
 
     if spec_file is None:
@@ -117,6 +137,63 @@ def _cmd_validate(spec_path: Path, fs: FileSystem) -> None:
     except (FileNotFoundError, ValueError) as exc:
         click.echo(f"Error: {exc}", err=True)
         raise SystemExit(1) from exc
+
+
+def _cmd_baseline(project_dir: Path, dry_run: bool, fs: FileSystem) -> None:
+    """Run a generated scaffold's declared gates and report the outcome of each."""
+    baseline = BaselineRunner(fs=fs)
+    try:
+        gates = baseline.gates(project_dir)
+    except ValueError as exc:
+        click.echo(f"Error: {exc}", err=True)
+        raise SystemExit(1) from exc
+
+    if not gates:
+        click.echo(f"Gate baseline for {project_dir}")
+        click.echo("This scaffold declares no quality gates. Nothing to run.")
+        return
+
+    if dry_run:
+        click.echo(f"Gate baseline for {project_dir} (dry run — nothing was executed)")
+        width = max(len(gate.name) for gate in gates)
+        for gate in gates:
+            click.echo(f"  {gate.name:<{width}}  {gate.run}")
+        click.echo(f"\n{len(gates)} gates. Nothing ran.")
+        return
+
+    click.echo(f"Gate baseline for {project_dir}")
+    outcomes = baseline.run(project_dir)
+    _echo_baseline_table(outcomes)
+    _echo_baseline_summary(outcomes)
+
+
+def _echo_baseline_table(outcomes: list[GateOutcome]) -> None:
+    name_width = max(len(o.gate.name) for o in outcomes)
+    run_width = max(len(o.gate.run) for o in outcomes)
+    status_width = max(len(o.outcome.value) for o in outcomes)
+    for outcome in outcomes:
+        click.echo(
+            f"  {outcome.gate.name:<{name_width}}  {outcome.gate.run:<{run_width}}  "
+            f"{outcome.outcome.value:<{status_width}}  {outcome.detail}".rstrip()
+        )
+
+
+def _echo_baseline_summary(outcomes: list[GateOutcome]) -> None:
+    counts = {outcome: 0 for outcome in Outcome}
+    for result in outcomes:
+        counts[result.outcome] += 1
+    tally = ", ".join(f"{count} {name.value}" for name, count in counts.items() if count)
+    click.echo(f"\n{len(outcomes)} gates: {tally}.")
+
+    if counts[Outcome.PASSED]:
+        click.echo(
+            "\nA gate that passed against a scaffold with no implementation in it may be "
+            "asserting nothing — check what it actually covers."
+        )
+    if counts[Outcome.FAILED]:
+        click.echo("Failing gates are expected here: they demand behavior nobody has built yet.")
+    if counts[Outcome.UNAVAILABLE]:
+        click.echo("Unavailable gates name tooling this stack still needs installed.")
 
 
 def _cmd_generate(

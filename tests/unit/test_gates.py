@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 
 from scaffold_generator.filesystem import InMemoryFileSystem
-from scaffold_generator.gates import Gate, GateCollector
-from scaffold_generator.resolver import Placeholder, ResolvedComponent
+from scaffold_generator.gates import Gate, GateCollector, parse_rendered
+from scaffold_generator.resolver import ComponentResult, Placeholder, ResolvedComponent
 
 PLACEHOLDER = "### {name} — no module\n"
 
@@ -31,6 +31,7 @@ def _module_files(name: str, checks: str | None, ci: str = "") -> dict[str, str]
 
 TWO_GATES = "gates:\n  - name: lint\n    run: ruff check .\n  - name: test\n    run: pytest\n"
 TWO_GATES_CI = "  api-checks:\n    steps:\n      - run: ruff check . && pytest\n"
+ONE_GATE = "gates:\n  - name: build\n    run: npm run build\n"
 
 
 class TestLoad:
@@ -155,3 +156,39 @@ class TestCount:
 
     def test_count_is_zero_without_checks_yml(self) -> None:
         assert _collector(_module_files("api", None)).count(Path("components/backend/api")) == 0
+
+
+class TestParseRendered:
+    """parse_rendered is the inverse of render; the round trip keeps them honest."""
+
+    def test_round_trip_recovers_every_rendered_gate(self) -> None:
+        files = {**_module_files("api", TWO_GATES), **_module_files("web", ONE_GATE)}
+        components: list[ComponentResult] = [_component("api"), _component("web")]
+        rendered = _collector(files).render(components, PLACEHOLDER)
+
+        parsed = parse_rendered(f"# Agent Workflow\n\n## Quality gates\n\n{rendered}\n")
+
+        assert parsed == [
+            Gate(name="lint", run="ruff check ."),
+            Gate(name="test", run="pytest"),
+            Gate(name="build", run="npm run build"),
+        ]
+
+    def test_a_module_with_no_gates_contributes_nothing(self) -> None:
+        rendered = _collector(_module_files("api", "gates: []\n")).render(
+            [_component("api")], PLACEHOLDER
+        )
+
+        assert parse_rendered(f"## Quality gates\n\n{rendered}\n") == []
+
+    def test_content_after_the_section_is_ignored(self) -> None:
+        document = (
+            "## Quality gates\n\n**api**\n- test — `pytest`\n\n"
+            "## Repository map\n\n- other — `not a gate`\n"
+        )
+
+        assert parse_rendered(document) == [Gate(name="test", run="pytest")]
+
+    def test_document_without_the_section_is_an_error(self) -> None:
+        with pytest.raises(ValueError, match="Quality gates"):
+            parse_rendered("# Agent Workflow\n\n## Repository map\n")
