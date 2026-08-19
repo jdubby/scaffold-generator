@@ -84,6 +84,28 @@ def _write_spec(run: GeneratorRun) -> None:
     run.spec_path.write_text(yaml.safe_dump(data))
 
 
+def _write_module(run: GeneratorRun, category: str, name: str, ci_yml: str) -> None:
+    """Write a complete five-fragment module into the scenario's component library."""
+    module_dir = run.components_dir / category / name
+    module_dir.mkdir(parents=True, exist_ok=True)
+    for filename in _FRAGMENT_FILENAMES:
+        section = filename.removesuffix(".md")
+        (module_dir / filename).write_text(f"### {name} {section}\n")
+    (module_dir / "agents.md").write_text(f"| {name} | components/{category}/{name} |\n")
+    (module_dir / "ci.yml").write_text(ci_yml)
+
+
+def _job_with_step(name: str, run_block: str) -> str:
+    """A ci.yml fragment: one job for *name* whose single step runs *run_block*."""
+    return (
+        f"  {name}-checks:\n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        "      - name: Integration tests\n"
+        f"        run: {run_block}\n"
+    )
+
+
 def _scaffold_file(run: GeneratorRun, filename: str) -> Path:
     path = run.output_dir / filename
     assert path.is_file(), f"Expected scaffold file is missing: {filename}"
@@ -98,14 +120,30 @@ def _scaffold_file(run: GeneratorRun, filename: str) -> Path:
 )
 def component_library(run: GeneratorRun, first: str, second: str, third: str) -> None:
     for name in (first, second, third):
-        category = _MODULE_CATEGORIES[name]
-        module_dir = run.components_dir / category / name
-        module_dir.mkdir(parents=True)
-        for filename in _FRAGMENT_FILENAMES:
-            section = filename.removesuffix(".md")
-            (module_dir / filename).write_text(f"### {name} {section}\n")
-        (module_dir / "agents.md").write_text(f"| {name} | components/{category}/{name} |\n")
-        (module_dir / "ci.yml").write_text(f"  {name}-checks:\n    run: {name} quality gates\n")
+        _write_module(
+            run,
+            _MODULE_CATEGORIES[name],
+            name,
+            f"  {name}-checks:\n    run: {name} quality gates\n",
+        )
+
+
+@given(
+    parsers.parse('the component library contains a module "{name}" with a gate that only prints')
+)
+def module_with_unfillable_gate(run: GeneratorRun, name: str) -> None:
+    gate = 'echo "Replace with the integration test command."'
+    _write_module(run, "database", name, _job_with_step(name, gate))
+
+
+@given(
+    parsers.parse(
+        'the component library contains a module "{name}" with a gate that prints then runs'
+    )
+)
+def module_with_real_gate(run: GeneratorRun, name: str) -> None:
+    gate = 'echo "running integration tests" && pytest'
+    _write_module(run, "database", name, _job_with_step(name, gate))
 
 
 @given(parsers.parse('a valid stack spec with name "{name}", platform "{platform}"'))
@@ -252,6 +290,13 @@ def warning_for_unknown_component(run: GeneratorRun, name: str) -> None:
     output = _result(run).output
     assert "Warning" in output
     assert name in output
+
+
+@then(parsers.parse('a warning is printed for a gate that cannot fail in "{job}"'))
+def warning_for_unfillable_gate(run: GeneratorRun, job: str) -> None:
+    output = _result(run).output
+    assert "cannot fail" in output, output
+    assert job in output, output
 
 
 @then(parsers.parse('an error is printed to stderr mentioning "{text}"'))

@@ -12,5 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run project quality gates
-        run: echo "Replace with this project's test, lint, format, and type-check commands."
+        run: |
+          # TODO: replace with this project's test, lint, format, and type-check commands.
+          exit 1
 # ASSEMBLE:ci

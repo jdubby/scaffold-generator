@@ -10,4 +10,6 @@
       - name: Unit tests (CPU, stub weights)
         run: pytest inference/
       - name: Model evaluation gate
-        run: echo "Replace with the project's eval-set check against the pinned threshold."
+        run: |
+          # TODO: replace with the project's eval-set check against the pinned threshold.
+          exit 1

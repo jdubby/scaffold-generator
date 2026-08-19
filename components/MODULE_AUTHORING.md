@@ -35,8 +35,20 @@ if a declared module is missing one.
 - **agents.md** — exactly one repository-map table row in the form
   `| <module-name> (<category>) | <where the code lives> — <what is there> |`.
 - **ci.yml** — one CI job keyed `<module-name>-checks:`, indented two spaces so
-  it lands inside the assembled `jobs:` mapping. Comment-only content is also
-  valid YAML if the module has no automatable checks yet.
+  it lands inside the assembled `jobs:` mapping. Every step must be able to fail.
+  A gate you cannot automate yet is written to fail, not to pass:
+
+  ```yaml
+      - name: Integration tests
+        run: |
+          # TODO: replace with the project's integration test command.
+          exit 1
+  ```
+
+  A step whose commands are all no-ops (`echo`, `true`, `:`) always exits 0, so it
+  reports success for work nobody has done — a green badge over zero assertions is
+  worse than no CI job at all. Contract validation reports these; see the checklist
+  below.
 
 ## Checklist before publishing a module
 
@@ -45,4 +57,6 @@ if a declared module is missing one.
 3. Generate a scaffold from a spec declaring the module and confirm the run
    prints **no warnings** — placeholder warnings mean a name mismatch, contract
    warnings mean a broken fragment.
-4. The assembled `AGENTS.md` stays within its 120-line contract limit.
+4. No gate in `ci.yml` exits 0 without asserting something. Unwired gates fail
+   with a TODO until their real command is written.
+5. The assembled `AGENTS.md` stays within its 120-line contract limit.

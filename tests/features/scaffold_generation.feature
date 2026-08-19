@@ -146,6 +146,24 @@ Feature: Scaffold generation
     And "ci.yml" contains a job block for "python-cli"
     And "AGENTS.md" contains a repository map row for "python-cli"
 
+  # AC-8
+  Scenario: A gate that cannot fail produces a warning
+    Given the component library contains a module "stub-db" with a gate that only prints
+    And a valid stack spec with name "test-app", platform "web"
+    And the spec declares database component "stub-db"
+    When the user runs the scaffold generator with the spec
+    Then the generator exits successfully
+    And a warning is printed for a gate that cannot fail in "stub-db-checks"
+
+  # AC-8
+  Scenario: A gate combining a message with a real command is not flagged
+    Given the component library contains a module "real-db" with a gate that prints then runs
+    And a valid stack spec with name "test-app", platform "web"
+    And the spec declares database component "real-db"
+    When the user runs the scaffold generator with the spec
+    Then the generator exits successfully
+    And no warnings are printed
+
   # AC-5
   Scenario: --list-components prints available modules by category
     When the user runs the scaffold generator with --list-components

@@ -26,6 +26,12 @@ scaffold --list-components     # list all available component modules by categor
 scaffold --validate spec.yml   # validate a spec without generating output
 ```
 
+Generated output is contract-checked before the command finishes. Findings print as
+warnings and never change the exit code: a missing required file, an unresolved
+assembly marker, an `AGENTS.md` over its line limit, or a `ci.yml` gate that cannot
+fail — a step whose commands are all no-ops, which would report success without
+asserting anything.
+
 ## Importing a scaffold package
 
 Upstream tools (e.g. product-laboratory) export a *scaffold package*: a

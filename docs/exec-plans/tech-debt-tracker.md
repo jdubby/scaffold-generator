@@ -28,6 +28,38 @@ _None identified yet._
 
 ## Resolved
 
+### [2026-08-19] Shipped modules declare CI gates that cannot fail
+- **Priority:** High
+- **Domain:** CI / automation
+- **Description:** Three `ci.yml` fragments contain steps whose command is a bare `echo`
+  and therefore always exit 0: `components/database/postgres/ci.yml` (migration and
+  integration-test steps), `components/inference/pytorch/ci.yml` (model evaluation gate),
+  and `core/ci.yml` (project-wide quality-gate step). `components/MODULE_AUTHORING.md`
+  explicitly permits it today.
+- **Impact:** Every project generated from those modules gets a green CI badge while
+  executing zero assertions for the affected gates — false confidence in an unverified
+  stack. `validator.py` cannot detect it: the contract covers required files, the
+  `AGENTS.md` line limit, and unresolved assembly markers, but not whether a declared
+  gate is capable of failing.
+- **Remediation:** Three parts, in order.
+  1. Convert the unfilled gates from `echo "Replace with…"` to `exit 1` plus a TODO
+     comment, so an unwired gate fails loudly instead of passing silently. The TODO is
+     legitimate at generation time; the exit code is what is wrong today.
+  2. Add `_check_unfillable_gates` to `src/scaffold_generator/validator.py`, alongside
+     `_check_unresolved_markers`, surfaced as a CLI warning (the precedent set by the
+     unknown-component warning) rather than a hard failure.
+  3. Amend `components/MODULE_AUTHORING.md` to require that an unautomated gate fail
+     rather than pass, and add the rule to the pre-publish checklist.
+- **Resolved:** 2026-08-19 — implemented as specified. `validator.py` gained
+  `_check_unfillable_gates`, which parses the assembled `ci.yml` and reports any step
+  whose commands are all no-ops (`echo`, `true`, `:`); unparseable YAML is reported
+  rather than skipped, since skipping would have made the new check one that cannot
+  fail. The four offending steps now carry a TODO comment plus `exit 1`, verified by
+  executing the generated run block rather than reading it (exit code 1).
+  `MODULE_AUTHORING.md` no longer sanctions comment-only gates and the pre-publish
+  checklist covers it. Plan:
+  `docs/exec-plans/completed/2026-08-19-gates-that-cannot-fail.md`.
+
 Move items here when addressed, with the resolution date and a brief note.
 
 ### [2026-05-12] Replace live-filesystem unit tests with boundary doubles

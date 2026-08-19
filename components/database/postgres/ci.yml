@@ -15,6 +15,10 @@
     steps:
       - uses: actions/checkout@v5
       - name: Apply migrations from zero
-        run: echo "Replace with the project's migration command against localhost:5432."
+        run: |
+          # TODO: replace with the project's migration command against localhost:5432.
+          exit 1
       - name: Integration tests
-        run: echo "Replace with the project's database integration test command."
+        run: |
+          # TODO: replace with the project's database integration test command.
+          exit 1

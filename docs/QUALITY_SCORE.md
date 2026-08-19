@@ -1,6 +1,6 @@
 # Quality Score
 
-> **Last reviewed:** 2026-08-18
+> **Last reviewed:** 2026-08-19
 
 This document grades each product domain and architectural layer. Update grades as
 work progresses. Add gap entries when deficiencies are found. A recurring review of
@@ -10,11 +10,11 @@ this document keeps debt visible and prevents silent accumulation.
 
 | Domain                | Grade | Notes                                                                 |
 |-----------------------|-------|-----------------------------------------------------------------------|
-| Test coverage (BDD)   | B     | 18 scenarios run via pytest-bdd and pass: 11 for scaffold generation, 7 for scaffold-package import (`docs/product-specs/package-import.md`, AC-1–AC-7), including out-of-the-box generation from the bundled library. |
-| Test coverage (unit)  | B     | 80 unit tests; module tests run against the in-memory filesystem double. |
+| Test coverage (BDD)   | B     | 20 scenarios run via pytest-bdd and pass: 13 for scaffold generation, 7 for scaffold-package import (`docs/product-specs/package-import.md`, AC-1–AC-7), including out-of-the-box generation from the bundled library. |
+| Test coverage (unit)  | B     | 95 unit tests; module tests run against the in-memory filesystem double. |
 | Type safety           | B     | `mypy src tests` passes under strict configuration.                  |
-| Documentation         | B     | Core docs and README are maintained, including the package-import workflow; remaining status gaps are tracked below. |
-| CI / automation       | B     | Workflow runs all four gates plus knowledge-base checks on every push/PR; last run verified green on GitHub Actions (Python 3.11). |
+| Documentation         | B     | Core docs and README are maintained, including the package-import workflow. One spec-vs-implementation drift is tracked below (scaffold-generation AC-1); remaining status gaps are tracked below. |
+| CI / automation       | B     | This repo's own workflow runs all four gates plus knowledge-base checks on every push/PR; last run verified green on GitHub Actions (Python 3.11). Generated projects are contract-checked for gates that cannot fail (AC-8), and every bundled module's unwired gates now fail. |
 | Security              | B     | Schema validation, slug-constrained spec values, and output-path preflight are implemented and tested. Dependency pinning mismatch still tracked. |
 | Reliability           | B     | Error paths are schema-structured, stderr-routed, and covered end-to-end. Boundary-double migration still tracked. |
 
@@ -40,6 +40,57 @@ Add gap entries here as they are discovered. Promote to
 - **Impact:** <what degrades or breaks if left unaddressed>
 - **Action:** <what needs to happen to resolve it>
 -->
+
+### [2026-08-19] Shipped component modules declare gates that cannot fail
+- **Domain:** CI / automation
+- **Gap:** Three `ci.yml` fragments contain steps whose command is a bare `echo`, so the
+  step always exits 0: `components/database/postgres/ci.yml` (both the migration step and
+  the integration-test step), `components/inference/pytorch/ci.yml` (the model evaluation
+  gate), and `core/ci.yml` (the project-wide quality-gate step). `components/MODULE_AUTHORING.md`
+  currently sanctions this — "Comment-only content is also valid YAML if the module has no
+  automatable checks yet."
+- **Impact:** A generated project reports a green CI badge while executing zero assertions
+  for those gates. That is worse than shipping no CI job, because it manufactures confidence
+  in an unverified stack. The generator's contract validator does not detect it: `validator.py`
+  checks that required files exist, that `AGENTS.md` stays within its line limit, and that no
+  assembly markers survive — it never checks that a declared gate can fail.
+- **Action:** Convert unfilled gates from `echo "Replace with…"` (exits 0) to `exit 1` with a
+  TODO comment (exits 1), so CI stays red until a human wires the real command; add a
+  contract check that warns when a `ci.yml` step's only command is an `echo`; amend
+  `MODULE_AUTHORING.md` to require that an unautomated gate fail rather than pass. Tracked in
+  `docs/exec-plans/tech-debt-tracker.md`.
+- **Resolved:** 2026-08-19 — AC-8 added to `docs/product-specs/scaffold-generation.md`;
+  `_check_unfillable_gates` added to `validator.py` (parses the assembled `ci.yml` and
+  reports any step whose commands are all no-ops, plus unparseable YAML rather than
+  skipping it); the four offending steps in `core/ci.yml`, `postgres/ci.yml` (x2), and
+  `pytorch/ci.yml` converted to a TODO comment plus `exit 1`, verified by executing the
+  generated run block (exit 1); `MODULE_AUTHORING.md` and `README.md` updated. Two BDD
+  scenarios and fifteen unit tests added. Plan:
+  `docs/exec-plans/completed/2026-08-19-gates-that-cannot-fail.md`.
+
+### [2026-08-19] Scaffold-generation AC-1 promises gate commands that are never assembled
+- **Domain:** Documentation
+- **Gap:** `docs/product-specs/scaffold-generation.md` AC-1 states that a generated
+  scaffold contains "AGENTS.md with quality gate commands and repository map rows from
+  each component". No component contributes gate commands. Each module's `agents.md`
+  fragment is a single repository-map table row, `core/AGENTS.md` carries only the
+  `<!-- ASSEMBLE:agents -->` marker feeding that table, and step 6 of its delivery loop
+  is generic prose ("run every gate this project defines"). The feature file matches the
+  implementation rather than the spec: `tests/features/scaffold_generation.feature`
+  asserts repository-map rows for every bundled module and never asserts a gate command.
+- **Impact:** The clause has never been implemented and never been tested, so the spec
+  overstates what a generated scaffold contains. An agent following the generated
+  `AGENTS.md` reaches the quality-gate step with no commands to run and must
+  reverse-engineer them from `ci.yml` — the most mechanical step in the delivery loop is
+  the one most open to interpretation. Because the acceptance criteria are the contract,
+  the drift also means AC-1 cannot be used to judge whether the feature is done.
+- **Action:** Close the gap by implementing it, not by weakening AC-1 — the promised
+  behavior is correct and worth having. `docs/product-specs/executable-gates.md` (Draft)
+  specifies the mechanism: modules declare gates as data in a `checks.yml` fragment, and
+  a new `gates` marker assembles them into the generated `AGENTS.md` (that spec's AC-2).
+  Reword AC-1 to reference the gates marker once it exists, and extend the AC-1 scenario
+  to assert a gate command per component. Promote to
+  `docs/exec-plans/tech-debt-tracker.md` when that increment gets an exec plan.
 
 ### [2026-08-18] This document lagged two commits behind main
 - **Domain:** Documentation

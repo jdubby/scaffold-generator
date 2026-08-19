@@ -106,6 +106,22 @@ ci.yml, a repository-map row per component in AGENTS.md, and AGENTS.md within it
 line limit. Placeholder text in generated output references the bundled
 `MODULE_AUTHORING.md`.
 
+### AC-8: A gate that cannot fail produces a warning
+
+Given a generated `ci.yml` containing a job step whose `run` block consists only of
+no-op commands (`echo`, `true`, or `:`), when the scaffold is generated, then
+generation succeeds and a contract-validation warning names the file, the job, and
+the step. A step combining a no-op with a real command is not flagged. A `ci.yml`
+that cannot be parsed as YAML produces its own warning rather than being skipped,
+because skipping unparseable input would itself be a check that cannot fail. The
+bundled library produces neither warning — AC-7 already requires it to generate
+without warnings of any kind.
+
+An unwired gate is legitimate in a freshly generated scaffold; the user is expected
+to fill it in. What the contract forbids is an unwired gate that *passes*. A gate
+that always exits 0 reports success for work nobody has done, so an unwired gate
+must fail (`exit 1` with a TODO) until its real command is wired.
+
 ---
 
 ## Open questions
