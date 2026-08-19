@@ -2,8 +2,8 @@
 
 Generates a project scaffold from a structured YAML stack spec by composing
 pre-authored component modules. Core tenets — BDD/TDD delivery loop, evaluator
-protocol, design quality criteria, contract validation — are preserved regardless
-of the stack.
+protocol, design quality criteria, contract validation, executable quality gates —
+are preserved regardless of the stack.
 
 ## What it does
 
@@ -12,8 +12,8 @@ scaffold spec.yml -o ./my-project
 ```
 
 Reads `spec.yml`, resolves each declared component to a module in the component
-library, and assembles a complete scaffold in `./my-project` (via `-o`/`--output`). Unknown components
-produce clearly-marked placeholder sections rather than failing.
+library, and assembles a complete scaffold in the directory given by `-o`/`--output`.
+Unknown components produce clearly-marked placeholder sections rather than failing.
 
 The repo bundles the component library (`components/`) and the stack-agnostic
 core templates (`core/`), used by default when `--components-dir`/`--core-dir`
@@ -22,33 +22,66 @@ python-cli (backend), firebase and postgres (database), pytorch (inference). To 
 module, see `components/MODULE_AUTHORING.md`.
 
 ```bash
-scaffold --list-components     # list all available component modules by category
+scaffold --list-components     # available modules by category, with gate counts
 scaffold --validate spec.yml   # validate a spec without generating output
-scaffold --baseline ./my-project          # run that scaffold's declared gates
-scaffold --baseline ./my-project --dry-run  # print the gate commands, run nothing
 ```
-
-`--baseline` runs the quality gates a generated scaffold declares and reports what
-each one did: passed, failed, unavailable, timed out, or skipped. Read the results
-backwards from a normal test run — against a fresh scaffold a **failing** gate is
-working, because it demands behavior nobody has built yet. A gate that **passes**
-against a scaffold with no implementation is the one to look at: it may be
-asserting nothing, and will keep asserting nothing. An **unavailable** gate names
-tooling the stack still needs.
-
-Gate commands are executed as an argument vector, never through a shell; a command
-containing shell syntax is skipped and reported. See `docs/SECURITY.md`.
-
-Component modules declare their quality gate commands in a `checks.yml` fragment.
-Those commands are assembled into the **Quality gates** section of the generated
-`AGENTS.md`, and a module that declares a gate its own `ci.yml` never runs is
-reported as a warning. `--list-components` shows each module's gate count.
 
 Generated output is contract-checked before the command finishes. Findings print as
 warnings and never change the exit code: a missing required file, an unresolved
 assembly marker, an `AGENTS.md` over its line limit, or a `ci.yml` gate that cannot
-fail — a step whose commands are all no-ops, which would report success without
-asserting anything.
+fail. A module missing a required fragment, or shipping a malformed one, is an error
+instead — the command names the module and the field, and writes nothing.
+
+## Quality gates
+
+Each component module declares its gate commands as data in a `checks.yml` fragment:
+
+```yaml
+gates:
+  - name: lint
+    run: ruff check .
+  - name: test
+    run: pytest
+```
+
+Those commands are assembled into the **Quality gates** section of the generated
+`AGENTS.md`, grouped by component, so the delivery loop's gate step names exactly what
+to run. A command two components share is listed once. A module whose checks are
+inherently project-specific declares `gates: []`, which states "none of my own"; an
+absent fragment is an incomplete module and fails generation.
+
+A module that declares a gate its own `ci.yml` never runs is reported as a warning —
+the declaration and the CI job are meant to be one source of truth.
+
+### Checking that the gates run
+
+```bash
+scaffold --baseline ./my-project            # run that scaffold's declared gates
+scaffold --baseline ./my-project --dry-run  # print the commands, run nothing
+```
+
+`--baseline` runs the gates a generated scaffold declares and classifies each one:
+
+| Outcome | Meaning |
+|---------|---------|
+| `passed` | The command exited 0. |
+| `failed` | The command exited non-zero, with its summary line. |
+| `unavailable` | The command is not installed on this machine. |
+| `skipped` | The command contains shell syntax, so nothing ran. |
+| `timed out` | The command exceeded the per-gate timeout. |
+
+Read the results backwards from a normal test run. Against a fresh scaffold a
+**failing** gate is working, because it demands behavior nobody has built yet. A gate
+that **passes** against a scaffold with no implementation is the one to look at: it may
+be asserting nothing, and will keep asserting nothing. An **unavailable** gate names
+tooling the stack still needs.
+
+Baseline is a diagnostic, not a gate of its own: it exits zero whatever the outcomes
+were, and non-zero only when the target cannot be read.
+
+Gate commands are executed as an argument vector, never through a shell, and a command
+containing shell syntax is skipped rather than executed. Use `--dry-run` to inspect a
+scaffold whose origin you do not trust. See `docs/SECURITY.md`.
 
 ## Importing a scaffold package
 
@@ -117,11 +150,14 @@ Rules, enforced by JSON-schema validation before any generation work:
 │       ├── cli.py          # Entry point and argument parsing
 │       ├── spec.py         # YAML spec loading and schema validation
 │       ├── resolver.py     # Component resolution and placeholder generation
+│       ├── gates.py        # Module-declared quality gates: parse, render, drift
 │       ├── assembler.py    # Template and fragment assembly
 │       ├── importer.py     # Scaffold-package overlay (specs, plans, domain map)
 │       ├── writer.py       # Filesystem output
 │       ├── validator.py    # Contract validation on generated output
-│       └── filesystem.py   # Filesystem boundary (real + in-memory implementations)
+│       ├── baseline.py     # Runs a generated scaffold's gates and classifies them
+│       ├── filesystem.py   # Filesystem boundary (real + in-memory implementations)
+│       └── runner.py       # Command boundary (real + fake implementations)
 └── tests/
     ├── conftest.py
     ├── features/           # Gherkin scenarios
