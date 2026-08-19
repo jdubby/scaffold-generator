@@ -1,0 +1,4 @@
+# Quality gates this module contributes to the generated AGENTS.md.
+gates:
+  - name: test
+    run: pytest inference/

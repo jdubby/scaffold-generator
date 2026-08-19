@@ -10,10 +10,10 @@ this document keeps debt visible and prevents silent accumulation.
 
 | Domain                | Grade | Notes                                                                 |
 |-----------------------|-------|-----------------------------------------------------------------------|
-| Test coverage (BDD)   | B     | 20 scenarios run via pytest-bdd and pass: 13 for scaffold generation, 7 for scaffold-package import (`docs/product-specs/package-import.md`, AC-1–AC-7), including out-of-the-box generation from the bundled library. |
-| Test coverage (unit)  | B     | 95 unit tests; module tests run against the in-memory filesystem double. |
+| Test coverage (BDD)   | B     | 27 scenarios run via pytest-bdd and pass: 13 for scaffold generation, 7 for executable quality gates, 7 for scaffold-package import, including out-of-the-box generation from the bundled library. |
+| Test coverage (unit)  | B     | 120 unit tests; module tests run against the in-memory filesystem double. |
 | Type safety           | B     | `mypy src tests` passes under strict configuration.                  |
-| Documentation         | B     | Core docs and README are maintained, including the package-import workflow. One spec-vs-implementation drift is tracked below (scaffold-generation AC-1); remaining status gaps are tracked below. |
+| Documentation         | B     | Core docs and README are maintained, including the package-import and executable-gates workflows. Remaining status gaps are tracked below. |
 | CI / automation       | B     | This repo's own workflow runs all four gates plus knowledge-base checks on every push/PR; last run verified green on GitHub Actions (Python 3.11). Generated projects are contract-checked for gates that cannot fail (AC-8), and every bundled module's unwired gates now fail. |
 | Security              | B     | Schema validation, slug-constrained spec values, and output-path preflight are implemented and tested. Dependency pinning mismatch still tracked. |
 | Reliability           | B     | Error paths are schema-structured, stderr-routed, and covered end-to-end. Boundary-double migration still tracked. |
@@ -91,6 +91,13 @@ Add gap entries here as they are discovered. Promote to
   Reword AC-1 to reference the gates marker once it exists, and extend the AC-1 scenario
   to assert a gate command per component. Promote to
   `docs/exec-plans/tech-debt-tracker.md` when that increment gets an exec plan.
+- **Resolved:** 2026-08-19 — implemented rather than reworded down. Modules now declare
+  gates as data in a required `checks.yml` fragment; a new `gates.py` layer renders them
+  into a **Quality gates** section of the generated `AGENTS.md` and reports any gate a
+  module's own `ci.yml` never runs. AC-1 now names the gates marker, and both the AC-1 and
+  AC-7 scenarios assert gate commands per component, so the criterion is executable rather
+  than aspirational. Plan:
+  `docs/exec-plans/completed/2026-08-19-executable-gates.md`.
 
 ### [2026-08-18] This document lagged two commits behind main
 - **Domain:** Documentation

@@ -1,0 +1,10 @@
+# Quality gates this module contributes to the generated AGENTS.md.
+gates:
+  - name: lint
+    run: npm run lint
+  - name: types
+    run: npx tsc --noEmit
+  - name: test
+    run: npm test -- --ci
+  - name: build
+    run: npm run build

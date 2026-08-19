@@ -3,6 +3,7 @@
 import re
 
 from scaffold_generator.filesystem import FileSystem, RealFileSystem
+from scaffold_generator.gates import GateCollector
 from scaffold_generator.resolver import ComponentResult, Placeholder, ResolvedComponent
 
 # Markdown templates use HTML-comment markers: <!-- ASSEMBLE:arch -->
@@ -11,6 +12,10 @@ _HTML_MARKER_PATTERN = re.compile(r"<!-- ASSEMBLE:([\w-]+) -->")
 # YAML templates use comment-line markers (HTML comments are not valid YAML).
 # The marker must be the only content on its line: # ASSEMBLE:ci
 _YAML_MARKER_PATTERN = re.compile(r"^[ \t]*# ASSEMBLE:([\w-]+)[ \t]*$", re.MULTILINE)
+
+# The gates marker transforms declared data into Markdown rather than injecting a
+# fragment verbatim, so it is handled by the gate collector, not the generic path.
+_GATES_MARKER = "gates"
 
 # Fragment filenames for each marker type.
 _FRAGMENT_FILENAME: dict[str, str] = {
@@ -46,6 +51,7 @@ class FileAssembler:
 
     def __init__(self, fs: FileSystem | None = None) -> None:
         self._fs: FileSystem = fs if fs is not None else RealFileSystem()
+        self._gates = GateCollector(self._fs)
 
     def assemble(self, template: str, components: list[ComponentResult]) -> str:
         """Replace every ASSEMBLE marker in *template*.
@@ -58,11 +64,14 @@ class FileAssembler:
         Markers for unknown fragment types are left unchanged.
 
         Raises:
-            ValueError: if a ResolvedComponent is missing the expected fragment file.
+            ValueError: if a ResolvedComponent is missing the expected fragment file,
+                or declares an invalid checks.yml.
         """
 
         def _replace(match: re.Match[str], placeholder_template: str) -> str:
             fragment_type = match.group(1)
+            if fragment_type == _GATES_MARKER:
+                return self._gates.render(components, placeholder_template)
             filename = _FRAGMENT_FILENAME.get(fragment_type)
             if filename is None:
                 return match.group(0)  # unknown marker type — leave intact

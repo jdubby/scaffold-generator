@@ -14,9 +14,15 @@ automated test exists for the next increment.
 3. **TDD** — write one failing unit test. Run the suite and show the failure.
 4. **Implement minimum** — only enough code to make the active failing test pass.
 5. **Refactor** — clean up only after the suite is green.
-6. **Quality gates** — run every gate this project defines (test runner, linter,
-   formatter, type checker). All must pass.
+6. **Quality gates** — run every command in **Quality gates** below. All must pass.
 7. **Evaluate** — apply `docs/EVALUATOR.md` before marking the task complete.
+
+## Quality gates
+
+Every command must pass before evaluation. Each stack component declares its own;
+a command shared by two components is listed once.
+
+<!-- ASSEMBLE:gates -->
 
 ## Repository map
 

@@ -6,6 +6,7 @@ import click
 
 from scaffold_generator.assembler import FileAssembler
 from scaffold_generator.filesystem import FileSystem, RealFileSystem
+from scaffold_generator.gates import GATES_FILENAME, GateCollector
 from scaffold_generator.importer import SPEC_FILENAME, ImportResult, PackageImporter
 from scaffold_generator.resolver import ComponentResolver, Placeholder
 from scaffold_generator.spec import SpecLoader
@@ -99,8 +100,9 @@ def _cmd_list_components(components_dir: Path, fs: FileSystem) -> None:
         if not modules:
             continue
         click.echo(f"{category_dir.name}:")
+        collector = GateCollector(fs)
         for module in modules:
-            click.echo(f"  - {module}")
+            click.echo(f"  - {module} ({_gate_summary(collector, category_dir / module)})")
         found_any = True
 
     if not found_any:
@@ -171,15 +173,27 @@ def _cmd_generate(
                 message += f" Available {component.category} modules: {', '.join(available)}."
             click.echo(message)
 
+    # Warn where a module declares no gates, or declares one its own CI never runs
+    try:
+        for message in GateCollector(fs).warnings(components):
+            click.echo(message)
+    except ValueError as exc:
+        click.echo(f"Error: {exc}", err=True)
+        raise SystemExit(1) from exc
+
     # 4. Assemble files from core templates
     assembler = FileAssembler(fs)
     files: dict[str, str] = {}
 
     if fs.is_dir(core_dir):
-        for template_path in fs.walk_files(core_dir):
-            relative = str(template_path.relative_to(core_dir))
-            template_content = fs.read_text(template_path)
-            files[relative] = assembler.assemble(template_content, components)
+        try:
+            for template_path in fs.walk_files(core_dir):
+                relative = str(template_path.relative_to(core_dir))
+                template_content = fs.read_text(template_path)
+                files[relative] = assembler.assemble(template_content, components)
+        except ValueError as exc:
+            click.echo(f"Error: {exc}", err=True)
+            raise SystemExit(1) from exc
     else:
         click.echo(f"Warning: core templates directory not found: {core_dir}")
 
@@ -213,6 +227,17 @@ def _available_modules(components_dir: Path, category: str, fs: FileSystem) -> l
     if not fs.is_dir(category_dir):
         return []
     return sorted(p.name for p in fs.list_dir(category_dir) if fs.is_dir(p))
+
+
+def _gate_summary(collector: GateCollector, module_path: Path) -> str:
+    """How a module's declared gate count is shown in --list-components."""
+    try:
+        count = collector.count(module_path)
+    except ValueError:
+        return f"invalid {GATES_FILENAME}"
+    if count == 0:
+        return "no gates declared"
+    return f"{count} gate{'s' if count > 1 else ''}"
 
 
 def _echo_import_summary(result: ImportResult) -> None:

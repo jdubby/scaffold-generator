@@ -27,7 +27,8 @@ _MODULE_CATEGORIES = {
 # contract validator expect in a generated scaffold.
 _CORE_TEMPLATES = {
     "AGENTS.md": (
-        "# Agent Workflow\n\n| What | Where |\n|------|-------|\n<!-- ASSEMBLE:agents -->\n"
+        "# Agent Workflow\n\n## Quality gates\n\n<!-- ASSEMBLE:gates -->\n\n"
+        "## Repository map\n\n| What | Where |\n|------|-------|\n<!-- ASSEMBLE:agents -->\n"
     ),
     "ARCHITECTURE.md": "# Architecture\n\n<!-- ASSEMBLE:arch -->\n",
     "README.md": "# README\n",
@@ -84,8 +85,18 @@ def _write_spec(run: GeneratorRun) -> None:
     run.spec_path.write_text(yaml.safe_dump(data))
 
 
-def _write_module(run: GeneratorRun, category: str, name: str, ci_yml: str) -> None:
-    """Write a complete five-fragment module into the scenario's component library."""
+def _write_module(
+    run: GeneratorRun,
+    category: str,
+    name: str,
+    ci_yml: str,
+    gate_run: str | None = None,
+) -> None:
+    """Write a complete module into the scenario's component library.
+
+    *gate_run* must be a command the module's ci.yml actually runs, or the drift
+    check reports the module. It defaults to the command the ci.yml below runs.
+    """
     module_dir = run.components_dir / category / name
     module_dir.mkdir(parents=True, exist_ok=True)
     for filename in _FRAGMENT_FILENAMES:
@@ -93,6 +104,8 @@ def _write_module(run: GeneratorRun, category: str, name: str, ci_yml: str) -> N
         (module_dir / filename).write_text(f"### {name} {section}\n")
     (module_dir / "agents.md").write_text(f"| {name} | components/{category}/{name} |\n")
     (module_dir / "ci.yml").write_text(ci_yml)
+    command = gate_run if gate_run is not None else f"{name} quality gates"
+    (module_dir / "checks.yml").write_text(f"gates:\n  - name: check\n    run: {command}\n")
 
 
 def _job_with_step(name: str, run_block: str) -> str:
@@ -133,7 +146,7 @@ def component_library(run: GeneratorRun, first: str, second: str, third: str) ->
 )
 def module_with_unfillable_gate(run: GeneratorRun, name: str) -> None:
     gate = 'echo "Replace with the integration test command."'
-    _write_module(run, "database", name, _job_with_step(name, gate))
+    _write_module(run, "database", name, _job_with_step(name, gate), gate_run=gate)
 
 
 @given(
@@ -143,7 +156,7 @@ def module_with_unfillable_gate(run: GeneratorRun, name: str) -> None:
 )
 def module_with_real_gate(run: GeneratorRun, name: str) -> None:
     gate = 'echo "running integration tests" && pytest'
-    _write_module(run, "database", name, _job_with_step(name, gate))
+    _write_module(run, "database", name, _job_with_step(name, gate), gate_run="pytest")
 
 
 @given(parsers.parse('a valid stack spec with name "{name}", platform "{platform}"'))
@@ -267,6 +280,18 @@ def placeholder_references(run: GeneratorRun, reference: str) -> None:
     assert reference in run.placeholder_file.read_text()
 
 
+@then(parsers.parse('"AGENTS.md" lists a quality gate for "{component}"'))
+def agents_lists_quality_gate(run: GeneratorRun, component: str) -> None:
+    content = _scaffold_file(run, "AGENTS.md").read_text()
+    assert f"**{component}**" in content, content
+
+
+@then(parsers.parse('"AGENTS.md" lists the gate command "{command}"'))
+def agents_lists_gate_command(run: GeneratorRun, command: str) -> None:
+    content = _scaffold_file(run, "AGENTS.md").read_text()
+    assert f"`{command}`" in content, content
+
+
 @then("the generator exits successfully")
 def exits_successfully(run: GeneratorRun) -> None:
     result = _result(run)
@@ -314,4 +339,4 @@ def output_lists_module_under_category(run: GeneratorRun, module: str, category:
         if not line.startswith("  "):
             break
         section.append(line.strip())
-    assert f"- {module}" in section
+    assert any(entry.startswith(f"- {module}") for entry in section), section

@@ -1,6 +1,6 @@
 # Product Spec: Executable quality gates
 
-**Status:** Draft
+**Status:** Active
 **Feature file:** `tests/features/executable_gates.feature`
 
 ## Goal
@@ -88,12 +88,16 @@ Given the bundled library, when the user runs `scaffold --list-components`, then
 each module is shown with the number of gates it declares, and modules declaring
 none are visibly marked as such.
 
-### AC-5: A module without checks.yml still generates
+### AC-5: A module with no gates of its own says so explicitly
 
-Given a module with no `checks.yml`, when a scaffold is generated from a spec
-including it, then generation succeeds and the run prints a warning naming the
-module and pointing at `components/MODULE_AUTHORING.md`. The generated
-`AGENTS.md` falls back to the current generic gate prose for that module.
+Given a module whose checks are inherently project-specific, when it declares
+`gates: []`, then generation succeeds without warnings and the generated
+`AGENTS.md` records that the module contributes no gates of its own. An empty
+declaration is a statement; an absent fragment is an incomplete module (AC-6).
+
+This replaces the migration-window behavior originally specified here, in which
+a missing `checks.yml` warned rather than failed. That path existed only until
+the bundled library was backfilled, which happened in the same increment.
 
 ### AC-6: The fragment becomes required once the library is clean
 
@@ -108,11 +112,12 @@ five. AC-5's warning path is removed in the same change.
 - Should a gate carry an optional `blocking: false` for gates that are advisory
   in CI but not in the delivery loop? No bundled module needs it today; adding
   the field later is backward compatible, so the default is to omit it.
-- `AGENTS.md` is capped at 120 lines and a four-module stack could declare a
-  dozen gates. If a realistic stack breaches the cap, the fallback is to move
-  the gate list to `docs/QUALITY_GATES.md` and leave a pointer in `AGENTS.md` —
-  which is the navigator role that file is supposed to play anyway. Decide when
-  a real spec breaches it, not before.
+- ~~`AGENTS.md` is capped at 120 lines and a four-module stack could declare a
+  dozen gates.~~ Answered by measurement: a spec declaring all seven bundled
+  modules — the widest stack the library can express — generates a 105-line
+  `AGENTS.md`, 15 under the cap. Command deduplication is what buys the headroom.
+  If a future module breaches it, move the gate list to `docs/QUALITY_GATES.md`
+  and leave a pointer in `AGENTS.md`.
 - Should `core/` declare project-wide gates the same way, rather than only
   modules? Probably yes, and it would give `core/ci.yml`'s currently-unfillable
   quality-gate step something real to hold — but it is entangled with the

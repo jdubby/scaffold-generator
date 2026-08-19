@@ -147,3 +147,32 @@ class TestFileAssemblerYamlFragments:
         result = assembler.assemble(template, [_component("backend", "fastapi")])
 
         assert result == template
+
+
+class TestGatesMarker:
+    """AC-2: declared gates are assembled into the AGENTS.md quality-gate section."""
+
+    def test_gates_marker_renders_declared_commands(self) -> None:
+        files = {
+            "components/backend/api/checks.yml": ("gates:\n  - name: test\n    run: pytest\n"),
+        }
+        assembler = FileAssembler(fs=InMemoryFileSystem(files=files))
+        component = ResolvedComponent(
+            category="backend", name="api", module_path=Path("components/backend/api")
+        )
+
+        result = assembler.assemble("<!-- ASSEMBLE:gates -->\n", [component])
+
+        assert "**api**" in result
+        assert "- test — `pytest`" in result
+        assert "ASSEMBLE:gates" not in result
+
+    def test_gates_marker_renders_placeholder_for_unknown_component(self) -> None:
+        assembler = FileAssembler(fs=InMemoryFileSystem(files={}))
+
+        result = assembler.assemble(
+            "<!-- ASSEMBLE:gates -->\n", [Placeholder(category="database", name="supabase")]
+        )
+
+        assert "supabase" in result
+        assert "No module found" in result

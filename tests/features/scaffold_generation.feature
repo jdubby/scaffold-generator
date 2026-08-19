@@ -38,6 +38,9 @@ Feature: Scaffold generation
     And "AGENTS.md" contains a repository map row for "react-native"
     And "AGENTS.md" contains a repository map row for "fastapi"
     And "AGENTS.md" contains a repository map row for "firebase"
+    And "AGENTS.md" lists a quality gate for "react-native"
+    And "AGENTS.md" lists a quality gate for "fastapi"
+    And "AGENTS.md" lists a quality gate for "firebase"
 
   # AC-2
   Scenario: Unknown component produces a placeholder, not a failure
@@ -110,6 +113,8 @@ Feature: Scaffold generation
     And "AGENTS.md" contains a repository map row for "react-native"
     And "AGENTS.md" contains a repository map row for "fastapi"
     And "AGENTS.md" contains a repository map row for "firebase"
+    And "AGENTS.md" lists the gate command "pytest"
+    And "AGENTS.md" lists the gate command "npm run lint"
 
   # AC-7
   Scenario: Bundled library covers a web stack with inference

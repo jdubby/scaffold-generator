@@ -26,6 +26,11 @@ scaffold --list-components     # list all available component modules by categor
 scaffold --validate spec.yml   # validate a spec without generating output
 ```
 
+Component modules declare their quality gate commands in a `checks.yml` fragment.
+Those commands are assembled into the **Quality gates** section of the generated
+`AGENTS.md`, and a module that declares a gate its own `ci.yml` never runs is
+reported as a warning. `--list-components` shows each module's gate count.
+
 Generated output is contract-checked before the command finishes. Findings print as
 warnings and never change the exit code: a missing required file, an unresolved
 assembly marker, an `AGENTS.md` over its line limit, or a `ci.yml` gate that cannot

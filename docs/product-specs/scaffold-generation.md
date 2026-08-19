@@ -58,7 +58,8 @@ when the generator runs, the output directory is created and contains:
 - ARCHITECTURE.md with one section per declared component
 - RELIABILITY.md with one section per declared component
 - SECURITY.md with one section per declared component
-- AGENTS.md with quality gate commands and repository map rows from each component
+- AGENTS.md with a Quality gates section listing each component's declared gate
+  commands (see `executable-gates.md`), and repository map rows from each component
 - ci.yml with one job block per component
 
 ### AC-2: Unknown component produces a placeholder, not a failure

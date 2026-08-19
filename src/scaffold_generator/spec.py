@@ -16,18 +16,18 @@ VALID_PLATFORMS = {"mobile", "web", "hybrid", "backend"}
 
 # Plain slug: no path separators, no leading dot. Spec values are matched against
 # the module library by name and must never be usable as raw filesystem paths.
-_SLUG_PATTERN = r"^[A-Za-z0-9][A-Za-z0-9._-]*$"
+SLUG_PATTERN = r"^[A-Za-z0-9][A-Za-z0-9._-]*$"
 
 _COMPONENT_LIST: dict[str, Any] = {
     "type": ["array", "null"],
-    "items": {"type": "string", "pattern": _SLUG_PATTERN},
+    "items": {"type": "string", "pattern": SLUG_PATTERN},
 }
 
 SPEC_SCHEMA: dict[str, Any] = {
     "type": "object",
     "required": ["name", "platform"],
     "properties": {
-        "name": {"type": "string", "pattern": _SLUG_PATTERN},
+        "name": {"type": "string", "pattern": SLUG_PATTERN},
         "platform": {"enum": sorted(VALID_PLATFORMS)},
         "frontend": _COMPONENT_LIST,
         "backend": _COMPONENT_LIST,

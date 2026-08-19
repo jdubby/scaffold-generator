@@ -1,0 +1,4 @@
+# Quality gates this module contributes to the generated AGENTS.md.
+gates:
+  - name: rules
+    run: npx firebase emulators:exec --only firestore "npm run test:rules"
