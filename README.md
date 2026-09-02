@@ -1,9 +1,35 @@
 # Scaffold Generator
 
-Generates a project scaffold from a structured YAML stack spec by composing
-pre-authored component modules. Core tenets — BDD/TDD delivery loop, evaluator
-protocol, design quality criteria, contract validation, executable quality gates —
-are preserved regardless of the stack.
+Packages a reusable engineering method for coding agents into a project repository.
+Choose a technology stack in YAML and receive agent instructions, architecture and
+engineering standards, quality-check commands, and a structured home for product
+requirements and project knowledge.
+
+The method asks an agent to define behavior, demonstrate a failing test, implement
+in small increments, run the project's checks, and critically evaluate the result
+before declaring the work complete. Shared instructions and pre-authored component
+modules keep that process consistent across supported stacks.
+
+**Start with [The engineering method](docs/ENGINEERING_METHOD.md)** to understand
+what you get, how an agent is expected to work, and what you need to configure.
+The generated scaffold supplies the working process and supporting files;
+application code and project-specific tests still need to be built.
+
+## The method you get
+
+- **A delivery loop:** spec → acceptance scenario → failing unit test → minimum
+  implementation → refactor → quality gates → evaluation.
+- **Project context:** a short `AGENTS.md` directs the agent to requirements,
+  architecture, standards, and known gaps maintained in the repository.
+- **Stack-specific rules:** selected modules contribute architecture, security,
+  reliability, repository locations, and quality commands.
+- **A completion standard:** the evaluator checks behavior, boundaries,
+  architecture, and code quality; any criterion below B sends the work back for
+  revision.
+
+These instructions guide an agent that reads and follows them. The generator
+checks scaffold structure and selected gate properties; it does not supervise
+the agent or certify the resulting application.
 
 ## What it does
 
@@ -70,11 +96,12 @@ scaffold --baseline ./my-project --dry-run  # print the commands, run nothing
 | `skipped` | The command contains shell syntax, so nothing ran. |
 | `timed out` | The command exceeded the per-gate timeout. |
 
-Read the results backwards from a normal test run. Against a fresh scaffold a
-**failing** gate is working, because it demands behavior nobody has built yet. A gate
-that **passes** against a scaffold with no implementation is the one to look at: it may
-be asserting nothing, and will keep asserting nothing. An **unavailable** gate names
-tooling the stack still needs.
+Use the baseline to inspect what the scaffold's commands actually do. A **failed**
+gate can expose missing implementation, but can also mean configuration or
+dependencies are missing. A **passed** gate may be legitimate, or may cover no
+meaningful behavior yet. An **unavailable** gate names tooling the stack still
+needs. Inspect the reason and coverage before treating any outcome as evidence
+of application quality.
 
 Baseline is a diagnostic, not a gate of its own: it exits zero whatever the outcomes
 were, and non-zero only when the target cannot be read.
@@ -144,6 +171,7 @@ Rules, enforced by JSON-schema validation before any generation work:
 ├── pyproject.toml
 ├── components/             # Bundled module library + MODULE_AUTHORING.md
 ├── core/                   # Stack-agnostic templates assembled into every scaffold
+├── docs/                   # Engineering method, generator specs, and project knowledge
 ├── examples/               # Example stack spec, kept valid by tests
 ├── src/
 │   └── scaffold_generator/
