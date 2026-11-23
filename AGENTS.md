@@ -25,7 +25,9 @@ exists for the next increment.
    - `ruff format --check .`
    - `mypy src tests`
 6. **Evaluate** — Apply the evaluation protocol in `docs/EVALUATOR.md` before marking
-   the task complete. If any criterion falls below B, return to step 3 and revise.
+   the task complete. Start the [review handoff](core/docs/EVALUATOR.md#review-handoff)
+   at the first failing test and complete it for the exact revision reviewed.
+   If any criterion falls below B, return to step 3 and revise.
 
 ## Python environment
 

@@ -11,11 +11,13 @@ automated test exists for the next increment.
 1. **Spec** — check `docs/product-specs/` for a spec covering the work. If none
    exists, write one before any scenario or code.
 2. **BDD** — write or update an acceptance scenario before implementation begins.
-3. **TDD** — write one failing unit test. Run the suite and show the failure.
+3. **TDD** — write one failing unit test. Run the suite and capture the failure
+   in the [review handoff](docs/EVALUATOR.md#review-handoff).
 4. **Implement minimum** — only enough code to make the active failing test pass.
 5. **Refactor** — clean up only after the suite is green.
 6. **Quality gates** — run every command in **Quality gates** below. All must pass.
-7. **Evaluate** — apply `docs/EVALUATOR.md` before marking the task complete.
+7. **Evaluate** — complete the handoff with the rubric grades, evidence and verdict.
+   To delegate review, [assign a separate evaluator](docs/EVALUATOR.md#assign-a-separate-evaluator).
 
 ## Quality gates
 
@@ -33,7 +35,8 @@ a command shared by two components is listed once.
 ## Knowledge base
 
 The `docs/` directory is the system of record. Pull in context before starting
-non-trivial work. Anything not in the repository is invisible to the agent.
+non-trivial work. Keep contributor guidance here and share restricted evidence
+separately with the assigned reviewer.
 
 | Context                        | Location                               |
 |--------------------------------|----------------------------------------|

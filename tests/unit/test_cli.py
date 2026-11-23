@@ -271,6 +271,29 @@ class TestBundledExampleSpec:
 
         assert result.exit_code == 0, result.output
 
+    def test_bundled_defaults_write_project_gitignore(
+        self, runner: CliRunner, tmp_path: Path
+    ) -> None:
+        project = tmp_path / "public-project"
+        result = runner.invoke(main, [str(self.EXAMPLE), "--output", str(project)])
+
+        assert result.exit_code == 0, result.output
+        assert (project / ".gitignore").is_file(), "Generated project has no default .gitignore"
+
+    def test_bundled_contributor_guide_links_to_project_resources(
+        self, runner: CliRunner, tmp_path: Path
+    ) -> None:
+        project = tmp_path / "example"
+        result = runner.invoke(main, [str(self.EXAMPLE), "--output", str(project)])
+        assert result.exit_code == 0, result.output
+
+        guide = project / "CONTRIBUTING.md"
+        assert guide.is_file(), "The bundled scaffold has no contributor guide"
+        content = guide.read_text()
+        for resource in ("README.md#setup", "docs/product-specs/index.md", "tests/features/"):
+            assert f"({resource})" in content
+            assert (project / resource.split("#")[0]).exists()
+
     def test_example_spec_generates_with_bundled_defaults_without_warnings(
         self, runner: CliRunner, tmp_path: Path
     ) -> None:

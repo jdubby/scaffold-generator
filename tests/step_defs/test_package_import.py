@@ -1,5 +1,7 @@
 """Executable bindings for tests/features/package_import.feature."""
 
+import os
+import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -175,6 +177,13 @@ def package_contains_domain_map(run: ImportRun, domain: str) -> None:
     _write_package_file(run, "docs/domain-map.md", _DOMAIN_MAP_TEMPLATE.format(domain=domain))
 
 
+@given("the generator uses the bundled templates and components")
+def bundled_templates(run: ImportRun) -> None:
+    root = Path(__file__).resolve().parents[2]
+    run.core_dir = root / "core"
+    run.components_dir = root / "components"
+
+
 @given("a directory that is not a scaffold package")
 def not_a_package(run: ImportRun) -> None:
     run.package_dir.mkdir(parents=True)
@@ -206,6 +215,62 @@ def run_with_spec(run: ImportRun) -> None:
 
 
 # --- Then ----------------------------------------------------------------
+
+
+@then("Git stages the public examples and review record while excluding local files")
+def public_git_staging(run: ImportRun) -> None:
+    local_files = {
+        ".env",
+        "backend/.env.production",
+        ".env.local",
+        "keys/signing.key",
+        "keys/signing.pem",
+        ".claude/history.jsonl",
+        ".codex/sessions/run.jsonl",
+        ".private-review/run.txt",
+    }
+    public_files = {
+        ".gitignore",
+        ".env.example",
+        "backend/.env.example",
+        "AGENTS.md",
+        ".claude/CLAUDE.md",
+        "tests/fixtures/synthetic.json",
+        "docs/reviews/result.md",
+    }
+    supplied = {
+        ".gitignore",
+        "AGENTS.md",
+        "tests/fixtures/synthetic.json",
+        "docs/reviews/result.md",
+        "keys/signing.key",
+    }
+    for relative in supplied:
+        assert (run.output_dir / relative).is_file(), relative
+    for relative in (local_files | public_files) - supplied:
+        path = run.output_dir / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("synthetic test content\n")
+
+    # Use a fresh Git index and ignore configuration, independent of the developer's machine.
+    env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    env.update(GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL=os.devnull)
+
+    def git(*args: str) -> str:
+        return subprocess.run(
+            ["git", "-c", f"core.excludesFile={os.devnull}", *args],
+            cwd=run.output_dir,
+            env=env,
+            check=True,
+            text=True,
+            capture_output=True,
+        ).stdout
+
+    git("init", "--template=")
+    git("add", "--all")
+    staged = set(git("ls-files").splitlines())
+    assert local_files.isdisjoint(staged), local_files & staged
+    assert public_files <= staged, public_files - staged
 
 
 @then("the generator exits successfully")

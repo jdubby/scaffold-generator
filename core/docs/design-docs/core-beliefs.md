@@ -1,8 +1,8 @@
 # Core Beliefs — Agent-First Development
 
-- **The repository is the agent's entire world.** Context that is not committed —
-  decisions, conventions, plans — does not exist in the next session. Write it
-  down where the docs say it belongs.
+- **Keep project context available across sessions.** Record shareable decisions,
+  conventions and plans in the repository. Give authorized reviewers access to
+  restricted evidence separately.
 - **Behavior before implementation.** A spec defines what users can do; scenarios
   make it checkable; tests make it enforceable. Code written before those exists
   tends to define its own requirements.

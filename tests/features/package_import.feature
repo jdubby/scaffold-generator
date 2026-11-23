@@ -23,6 +23,19 @@ Feature: Scaffold package import
     And the scaffold does not contain "stack-spec.yml"
     And the scaffold does not contain ".DS_Store"
 
+  # AC-8
+  Scenario: Git stages shareable files when a package supplies its own ignore file
+    Given a scaffold package with a valid stack spec named "public-project"
+    And the generator uses the bundled templates and components
+    And the package contains a hidden file ".gitignore"
+    And the package contains "keys/signing.key"
+    And the package contains "tests/fixtures/synthetic.json"
+    And the package contains "docs/reviews/result.md"
+    When the user runs the scaffold generator with the package directory
+    Then the generator exits successfully
+    And the scaffold contains "keys/signing.key"
+    And Git stages the public examples and review record while excluding local files
+
   # AC-2
   Scenario: Imported product specs are indexed
     Given a scaffold package with a valid stack spec named "snapsell"

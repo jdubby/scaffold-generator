@@ -104,6 +104,7 @@ Feature: Scaffold generation
     And no warnings are printed
     And the scaffold contains "AGENTS.md"
     And the scaffold contains "ci.yml"
+    And the scaffold contains ".gitignore"
     And "ARCHITECTURE.md" contains a section for "react-native"
     And "docs/RELIABILITY.md" contains a section for "fastapi"
     And "docs/SECURITY.md" contains a section for "firebase"
@@ -168,6 +169,28 @@ Feature: Scaffold generation
     When the user runs the scaffold generator with the spec
     Then the generator exits successfully
     And no warnings are printed
+
+  # AC-9
+  Scenario: A fresh reviewer can find and complete the review handoff
+    Given the component library and core templates bundled with this repository
+    And a valid stack spec with name "review-example", platform "backend"
+    And the spec declares backend component "python-cli"
+    When the user runs the scaffold generator with the spec
+    Then the generator exits successfully
+    And the generated workflow links to a review handoff for the implementer and evaluator
+    And the handoff provides for missing original evidence and both review modes
+    And the generated workflow links to the separate evaluator assignment
+
+  # AC-11
+  Scenario: A new contributor finds the development and review instructions
+    Given the component library and core templates bundled with this repository
+    And a valid stack spec with name "contributor-example", platform "backend"
+    And the spec declares backend component "python-cli"
+    When the user runs the scaffold generator with the spec
+    Then the generator exits successfully
+    And the scaffold contains "CONTRIBUTING.md"
+    And the generated README links to the contributor guide
+    And the guide links to this project's quality gates and review handoff
 
   # AC-5
   Scenario: --list-components prints available modules by category

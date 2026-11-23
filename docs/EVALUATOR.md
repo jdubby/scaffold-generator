@@ -12,9 +12,10 @@ declaring any feature task complete. For complex tasks tracked in
 `docs/exec-plans/active/`, run an evaluation pass at each milestone in the plan,
 not just at the end.
 
-The generator and evaluator are the same agent when working solo. The value of
-this protocol is in the **explicit mode switch**: stop generating, read this file,
-and re-examine the work as an adversary would.
+A separate agent or person can evaluate the change. When working solo, switch
+from implementing to reviewing and label the result as self-review. Use the
+[review handoff](../core/docs/EVALUATOR.md#review-handoff) for the implementer's
+evidence and the evaluator's grades, observations and verdict.
 
 ## Criteria
 
