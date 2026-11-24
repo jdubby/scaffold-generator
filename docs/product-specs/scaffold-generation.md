@@ -123,6 +123,38 @@ to fill it in. What the contract forbids is an unwired gate that *passes*. A gat
 that always exits 0 reports success for work nobody has done, so an unwired gate
 must fail (`exit 1` with a TODO) until its real command is wired.
 
+### AC-9: Review a change from the generated repository
+
+A reviewer who starts without the implementation chat can follow the bundled
+workflow to a reusable handoff. The implementer identifies the spec criterion,
+exact revision, and original failing test run when available. Missing original
+evidence is recorded as sequence unverified. A later reproduction can demonstrate
+test sensitivity but cannot establish when the implementer first ran the test.
+
+The evaluator identifies the review as independent or self-review, exercises the
+primary behavior, records gate outcomes for the reviewed revision, and cites
+evidence for each of the four grades and the resulting verdict. The handoff can
+reference existing artifacts in a pull request or repository record.
+
+A project owner can start a separate evaluator session using a copyable assignment
+in the generated guide. It identifies the revision and handoff, directs the agent
+to the project rubric, and explains how findings and revised work return for review.
+
+### AC-10: Public repository defaults
+
+With bundled templates, the generated root `.gitignore` excludes local environment
+values, common private key files, agent-local history and private review evidence.
+A contributor can stage a dummy `.env.example`, shared agent instructions,
+synthetic fixtures, and public review records with ordinary Git commands.
+
+### AC-11: Contributors can follow the project's development method
+
+A contributor opening the bundled scaffold's README can reach a root
+`CONTRIBUTING.md` that explains how to move from a spec and acceptance scenario
+through an observed failing test, minimal implementation, refactoring, quality
+gates and evaluation. They can find the project's actual gate commands and
+review handoff, and prepare public-safe evidence for a pull request.
+
 ---
 
 ## Open questions

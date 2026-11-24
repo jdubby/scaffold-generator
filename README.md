@@ -31,6 +31,15 @@ These instructions guide an agent that reads and follows them. The generator
 checks scaffold structure and selected gate properties; it does not supervise
 the agent or certify the resulting application.
 
+For each change, the implementer records the acceptance criterion, exact revision,
+and evidence from the original failing test. A second agent or the implementer can
+then exercise the workflow and record gate results, evidence for all four grades,
+review mode, and verdict in the same PR or repository record. The generated
+evaluator guide includes a [reusable review handoff](core/docs/EVALUATOR.md#review-handoff)
+and a [prompt for a separate evaluator](core/docs/EVALUATOR.md#assign-a-separate-evaluator).
+
+Generated projects also include a [contributor guide](core/CONTRIBUTING.md) covering bug reports, test-first changes, and evidence to include in a pull request.
+
 ## What it does
 
 ```bash
@@ -132,6 +141,13 @@ treatment:
 
 `stack-spec.yml` itself and hidden files (`.DS_Store`) are not copied. The
 command ends with a summary of everything it placed.
+
+For a public repository, inspect `git diff --cached` after staging and before
+publishing, especially after importing a package. The bundled `.gitignore`
+excludes environment overrides, common key files, local agent history and the
+root `.private-review/` directory. Commit dummy `.env.example` files, synthetic
+fixtures and public-safe review summaries. Git applies these rules to untracked
+paths. An ordinary imported document can still contain sensitive information.
 
 ## Spec format
 

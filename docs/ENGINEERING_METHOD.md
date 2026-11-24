@@ -36,6 +36,7 @@ templates so you can inspect the actual instructions before generating a project
 
 | Generated artifact | What you get |
 | --- | --- |
+| [Contributor guide](../core/CONTRIBUTING.md) | Instructions for reporting a bug, making a test-first change, and preparing a reviewable pull request. |
 | [`AGENTS.md`](../core/AGENTS.md) | The delivery loop, exact component quality commands, repository navigation, mocking rules, and change discipline. |
 | [`ARCHITECTURE.md`](../core/ARCHITECTURE.md) | Selected components' responsibilities and guidance, dependency rules, and a domain map to complete or import. |
 | [`docs/product-specs/index.md`](../core/docs/product-specs/index.md) | A specification template and index for goals, scope, acceptance criteria, and open questions. |
@@ -126,9 +127,17 @@ definitions. All four must be B or above. A lower grade requires a precise
 observation and a resolution that would bring the work to the threshold; the
 agent returns to revision before marking the feature complete.
 
-The same agent may implement and evaluate. The template makes the switch of role
-explicit, but this remains self-review unless another reviewer is involved.
-Grades are judgments supported by evidence, not independently certified scores.
+The implementer starts a review record with the acceptance criterion and evidence
+from the original failing test, then hands over the exact revision. Missing
+original evidence is marked **sequence unverified**. A reviewer can reproduce the
+failure later and record that observation separately.
+
+An independent evaluator can start from the record without the implementer's
+chat. The evaluator exercises the primary workflow, records each gate outcome,
+and gives evidence for every grade and the verdict. A solo implementer follows
+the same steps and labels the verdict **self-review**. Keep the record in the
+PR or a versioned task record and link existing CI results where available.
+See the [review handoff](../core/docs/EVALUATOR.md#review-handoff).
 
 ## An example of the method in use
 

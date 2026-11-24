@@ -232,6 +232,50 @@ def run_list_components(run: GeneratorRun) -> None:
 # --- Then ----------------------------------------------------------------
 
 
+@then("the generated workflow links to a review handoff for the implementer and evaluator")
+def linked_review_handoff(run: GeneratorRun) -> None:
+    workflow = _scaffold_file(run, "AGENTS.md").read_text()
+    assert "(docs/EVALUATOR.md#review-handoff)" in workflow
+    protocol = _scaffold_file(run, "docs/EVALUATOR.md").read_text()
+    assert "## Review handoff" in protocol
+    for label in (
+        "Acceptance criterion",
+        "Reviewed revision",
+        "Original failing run",
+        "Workflow exercised",
+        "Gate results",
+        "Verdict",
+    ):
+        assert label in protocol
+
+
+@then("the handoff provides for missing original evidence and both review modes")
+def review_modes_and_missing_evidence(run: GeneratorRun) -> None:
+    protocol = _scaffold_file(run, "docs/EVALUATOR.md").read_text().lower()
+    for option in ("sequence unverified", "independent", "self-review"):
+        assert option in protocol
+
+
+@then("the generated workflow links to the separate evaluator assignment")
+def linked_separate_evaluator(run: GeneratorRun) -> None:
+    workflow = _scaffold_file(run, "AGENTS.md").read_text()
+    assert "(docs/EVALUATOR.md#assign-a-separate-evaluator)" in workflow
+    protocol = _scaffold_file(run, "docs/EVALUATOR.md").read_text()
+    assert "## Assign a separate evaluator" in protocol
+
+
+@then("the generated README links to the contributor guide")
+def readme_links_to_contributing(run: GeneratorRun) -> None:
+    assert "(CONTRIBUTING.md)" in _scaffold_file(run, "README.md").read_text()
+
+
+@then("the guide links to this project's quality gates and review handoff")
+def contributor_workflow_links(run: GeneratorRun) -> None:
+    guide = _scaffold_file(run, "CONTRIBUTING.md").read_text()
+    for link in ("AGENTS.md#quality-gates", "docs/EVALUATOR.md#review-handoff"):
+        assert f"({link})" in guide
+
+
 @then("the output directory is created")
 def output_directory_created(run: GeneratorRun) -> None:
     assert run.output_dir.is_dir()

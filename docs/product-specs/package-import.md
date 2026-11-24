@@ -91,6 +91,13 @@ Given a package import, when generation succeeds, then the output lists each
 overlaid file and notes the index rows added and whether the domain map was
 merged.
 
+### AC-8: Package import preserves the bundled Git defaults
+
+With the bundled templates, a package's hidden `.gitignore` cannot override the
+generated policy. Git applies the same staging rules to imported content as to
+files created later in the project. The developer can inspect ordinary imported
+files in the staged diff before publishing.
+
 ## Open questions
 
 - Should the consumed `stack-spec.yml` be copied into the scaffold root for

@@ -151,6 +151,8 @@ activemq-data/
 
 # Environments
 .env
+.env.*
+!.env.example
 .envrc
 .venv
 env/
@@ -219,7 +221,23 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
+# Common private key and signing credential files
+*.key
+*.pem
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+
+# Raw evidence for local review
+/.private-review/
+
+# Codex local history
+.codex/history.jsonl
+.codex/sessions/
+
 # Claude Code configuration and local history
+.claude/projects/
 .claude/settings.local.json
 .claude/history.jsonl
 .claude/cache/

@@ -4,6 +4,8 @@
 > project does and who it is for — then keep this file accurate as the project
 > evolves. A stale README is a bug.
 
+To report a bug or submit a change, start with the [contributor guide](CONTRIBUTING.md).
+
 ## Setup
 
 Document the steps a new contributor runs to get a working environment.
@@ -18,6 +20,13 @@ runner, linter, formatter, type checker). Wire the same commands into `ci.yml`.
 Describe the top-level layout once code exists. `ARCHITECTURE.md` holds the
 deeper map.
 
+## Publishing the project
+
+Review `git diff --cached` after staging and before the first public push,
+especially after a package import. Check ordinary documents and fixtures for
+customer data. Keep dummy configuration in `.env.example` and raw local review
+evidence in the ignored `.private-review/` directory at the project root.
+
 ## Definition of done
 
 A change is not complete until:
@@ -25,4 +34,5 @@ A change is not complete until:
 - the behavior is described in an acceptance scenario grounded in a product spec
 - at least one failing test existed before the implementation
 - all quality gates pass
+- the [review handoff](docs/EVALUATOR.md#review-handoff) records the verdict for the reviewed revision
 - this README accurately describes the current state of the project
